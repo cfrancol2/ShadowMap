@@ -1,0 +1,6 @@
+2026-04-26 00:33:01,864 | INFO | Iniciando scraper con parámetros: {'seeds': 'seeds.txt', 'keywords': 'identifiers.txt', 'max_depth': 2, 'delay': 5, 'timeout': 35, 'max_retries': 3, 'failure_threshold': 10, 'pause_hours': 1.0, 'checkpoint_file': 'c:/Users/impro/OneDrive/Documentos/Titulacion TI/Scraping-Onion-Sites/output/checkpoint.json', 'resume': True, 'jsonl_out': 'output/forum_records.jsonl', 'csv_out': 'output/forum_records.csv', 'report_out': 'output/report.txt', 'log_file': 'c:/Users/impro/OneDrive/Documentos/Titulacion TI/Scraping-Onion-Sites/output/scraper.log', 'send_telegram': False}
+2026-04-26 00:33:01,864 | INFO | Checkpoint cargado: pending=0 visited=0
+2026-04-26 00:33:01,864 | INFO | --- Verificando conexión Tor ---
+2026-04-26 00:33:05,962 | ERROR | No fue posible verificar Tor: SOCKSHTTPSConnectionPool(host='icanhazip.com', port=443): Max retries exceeded with url: / (Caused by NewConnectionError("SOCKSHTTPSConnection(host='icanhazip.com', port=443): Failed to establish a new connection: [WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"))
+2026-04-26 00:33:05,965 | INFO | Ingesta completada. Registros únicos=0
+2026-04-26 00:33:05,965 | INFO | Salidas: output/forum_records.jsonl | output/forum_records.csv | output/report.txt
