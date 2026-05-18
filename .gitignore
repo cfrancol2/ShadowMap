@@ -1,6 +1,8 @@
 # Ignorar carpeta de documentación
 docs/
+Kali/
 
 # Ignorar documentos de Word
 *.doc
 *.docx
+*.tmp
