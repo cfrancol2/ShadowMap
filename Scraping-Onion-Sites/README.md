@@ -66,6 +66,13 @@ El scraper incluye mecanismos para entornos onion inestables:
   - Detecta redirecciones sospechosas a home/login desde rutas tipo thread/post/topic
   - Ante detección: rota circuito Tor y reintenta URL.
 
+- **Guardado incremental de datos**
+  - **NUEVO**: Los registros se guardan automáticamente después de procesar cada página
+  - Deduplicación por página antes de guardar (evita duplicados en el mismo hilo)
+  - Permite pausar/cerrar el programa y reanudar sin perder datos
+  - Los archivos CSV y JSONL se actualizan incrementalmente (modo append)
+  - Ideal para ejecuciones largas donde se necesita seguridad de datos
+
 ## Archivos de entrada esperados
 
 - `seeds.txt` → URLs `.onion` semilla (una por línea)

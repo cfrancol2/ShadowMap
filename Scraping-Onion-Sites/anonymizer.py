@@ -45,8 +45,9 @@ class PIIAnonymizer:
     def anonymize_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
         out = dict(record)
 
-        if "username" in out:
-            out["username"] = self.anonymize_username(out.get("username"))
+        # Mantener username original para análisis de tendencias
+        # if "username" in out:
+        #     out["username"] = self.anonymize_username(out.get("username"))
 
         for field in ("title", "body", "quoted_text"):
             if field in out:

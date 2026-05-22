@@ -11,7 +11,7 @@ import random
 import re
 import requests
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
@@ -276,19 +276,24 @@ def extract_posts_from_html(url: str, html: str) -> List[Dict[str, Any]]:
 
 
 def save_jsonl(records: List[Dict[str, Any]], path: str) -> None:
-    """Guarda registros en formato JSONL para procesamiento incremental."""
+    """Guarda registros en formato JSONL para procesamiento incremental.
+    Modo 'a' para append y evitar sobreescritura en guardado incremental."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
+    with open(path, "a", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
 def save_csv(records: List[Dict[str, Any]], path: str) -> None:
-    """Guarda registros en CSV para análisis tabular."""
+    """Guarda registros en CSV para análisis tabular.
+    Modo 'a' para append y evitar sobreescritura en guardado incremental.
+    Solo escribe header si el archivo está vacío."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w", newline="", encoding="utf-8") as f:
+    file_exists = os.path.exists(path) and os.path.getsize(path) > 0
+    with open(path, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
-        writer.writeheader()
+        if not file_exists:
+            writer.writeheader()
         for r in records:
             row = dict(r)
             row["extracted_entities"] = json.dumps(row.get("extracted_entities", {}), ensure_ascii=False)
@@ -444,6 +449,8 @@ def main() -> None:
     parser.add_argument("--pause-hours", type=float, default=1.0)
     parser.add_argument("--checkpoint-file", default="output/checkpoint.json")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--days-back", type=int, default=0,
+                       help="Solo guardar posts de los últimos N días (0 = todos)")
     parser.add_argument("--jsonl-out", default="output/forum_records.jsonl")
     parser.add_argument("--csv-out", default="output/forum_records.csv")
     parser.add_argument("--report-out", default="output/report.txt")
@@ -524,6 +531,27 @@ def main() -> None:
         records.extend(page_records)
         logger.info("Registros extraídos en página: %s", len(page_records))
 
+        # Filtro por fecha si days_back > 0
+        if args.days_back > 0:
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=args.days_back)
+            page_records = [r for r in page_records if datetime.fromisoformat(r["timestamp"]) >= cutoff_date]
+            logger.info("Filtrados por fecha reciente: %s registros", len(page_records))
+
+        # Deduplicación incremental por página antes de guardar
+        content_fingerprints = set()
+        unique_page_records = []
+        for record in page_records:
+            fingerprint = record["content_fingerprint"]
+            if fingerprint not in content_fingerprints:
+                content_fingerprints.add(fingerprint)
+                unique_page_records.append(record)
+
+        # Guardado incremental por página (no esperar al final)
+        if unique_page_records:
+            save_jsonl(unique_page_records, args.jsonl_out)
+            save_csv(unique_page_records, args.csv_out)
+            logger.info("Guardado incremental: %s registros únicos de %s", len(unique_page_records), current_url)
+
         # Descubrir nuevos enlaces onion para seguir recorriendo.
         for link in extract_onion_links(html):
             if link not in visited:
@@ -532,7 +560,8 @@ def main() -> None:
         save_checkpoint(args.checkpoint_file, pending, visited)
         time.sleep(args.delay)
 
-    # Deduplicación por huella digital de contenido en lugar de message_id
+    # Deduplicación final global (opcional: ya se deduplicó por página)
+    # Solo para garantizar consistencia si hay duplicados entre páginas
     raw_count = len(records)
     content_fingerprints = set()
     unique_records = []
@@ -546,12 +575,11 @@ def main() -> None:
     duplicate_count = raw_count - len(unique_records)
     final_records = unique_records
 
-    # Guardado incremental por lote
-    batch_size = 100
-    for i in range(0, len(final_records), batch_size):
-        batch = final_records[i:i + batch_size]
-        save_jsonl(batch, args.jsonl_out)
-        save_csv(batch, args.csv_out)
+    # Guardado final global (opcional: ya se guardó incrementalmente)
+    # Solo para garantizar que todos los datos estén en los archivos
+    if final_records:
+        save_jsonl(final_records, args.jsonl_out)
+        save_csv(final_records, args.csv_out)
 
     save_keyword_report(keyword_matches, args.report_out)
 
