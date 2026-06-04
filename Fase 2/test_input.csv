@@ -1,6 +1,0 @@
-message_id,username,timestamp,body_limpio,forum_name
-msg_001,user1,2026-05-22T02:08:27.214395+00:00,"Cobalt Strike malware detected in the system. Need to check CVE-2024-1234 vulnerability.",test_forum
-msg_002,user1,2026-05-22T02:09:10.379667+00:00,"Phishing attack using PowerShell scripts. Lateral movement detected.",test_forum
-msg_003,user1,2026-05-22T02:09:45.123456+00:00,"Mimikatz tool found in memory. Credential dumping in progress.",test_forum
-msg_004,user2,2026-05-22T02:10:20.678901+00:00,"Ransomware attack with Ryuk variant. Data encryption started.",test_forum
-msg_005,user2,2026-05-22T02:11:30.456789+00:00,"Exploit using zero-day vulnerability. Need immediate patching.",test_forum

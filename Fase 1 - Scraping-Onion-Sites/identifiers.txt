@@ -1,0 +1,39 @@
+# Palabras clave iniciales para detección de amenazas
+ransomware
+leak
+data breach
+credential
+access
+initial access
+lateral movement
+privilege escalation
+persistence
+c2
+command and control
+exfiltration
+encryptor
+decryptor
+locker
+stealer
+malware
+botnet
+exploit
+zero-day
+vulnerability
+cve
+phishing kit
+rdp access
+vpn access
+Tenebris
+Pitch
+Dread
+BreachForums
+DarkForums
+Exploit.in
+Nulled
+BHF
+Cracked
+FreeHacks
+RAMP
+Altenen
+CryptBB
