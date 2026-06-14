@@ -85,13 +85,13 @@ def preprocesar_csv(ruta_entrada: str, ruta_salida: str) -> None:
     columnas_existentes = [col for col in columnas_finales if col in df_filtrado.columns]
     df_final = df_filtrado[columnas_existentes]
 
-    # Forzar tipos de datos para consistencia
-    columnas_str = ['id_mensaje', 'huella_contenido', 'id_hilo', 'usuario',
-                    'fecha_hora', 'titulo_limpio', 'cuerpo_limpio',
+    # Forzar tipos de datos para consistencia (antes de guardar)
+    columnas_str = ['id_mensaje', 'huella_contenido', 'id_hilo', 'id_mensaje_padre',
+                    'usuario', 'fecha_hora', 'titulo_limpio', 'cuerpo_limpio',
                     'texto_citado_limpio', 'url_original']
     for col in columnas_str:
         if col in df_final.columns:
-            df_final[col] = df_final[col].fillna('').astype(str)
+            df_final[col] = df_final[col].fillna('').astype("string")
 
     columnas_int = ['año', 'mes', 'dia', 'hora', 'longitud_titulo', 'longitud_cuerpo']
     for col in columnas_int:
@@ -104,6 +104,11 @@ def preprocesar_csv(ruta_entrada: str, ruta_salida: str) -> None:
     print(f"Registros originales: {len(df)}")
     print(f"Registros después de filtrado: {len(df_filtrado)}")
     print(f"Columnas en el resultado: {list(df_final.columns)}")
+
+    # Verificar tipos resultantes
+    print("\nTipos de datos en el archivo final:")
+    for col in df_final.columns:
+        print(f"  {col}: {df_final[col].dtype}")
 
 def main():
     """Punto de entrada para ejecución desde línea de comandos."""

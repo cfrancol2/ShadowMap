@@ -3,6 +3,7 @@ beautifulsoup4==4.14.3
 requests==2.32.5
 requests[socks]==2.32.5
 requests-tor==1.4
+pandas
 
 # Dependencias transitivas fijadas para mayor reproducibilidad
 brotli==1.2.0
