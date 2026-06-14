@@ -30,7 +30,6 @@ import os
 import cargar_secuencias
 import entrenar_hmm
 import predecir_siguiente
-import visualizar_resultados
 
 # ---------------------------------------------------------------------------
 # Configuración de logging
@@ -79,11 +78,6 @@ def main():
         "--reporte-csv", "-r",
         default="../Datos/reporte_autores.csv",
         help="Ruta para el reporte CSV de autores (default: ../Datos/reporte_autores.csv)"
-    )
-    parser.add_argument(
-        "--dashboard-dir", "-d",
-        default="../Dashboard_HMM",
-        help="Directorio para las visualizaciones (default: ../Dashboard_HMM)"
     )
     parser.add_argument(
         "--n-estados", "-e",
@@ -188,19 +182,6 @@ def main():
     predecir_siguiente.generar_reporte_csv(resultados, mapeo_kill, args.reporte_csv)
     logger.info(f"Reporte guardado en: {args.reporte_csv}")
 
-    # Paso 5: Generar visualizaciones
-    logger.info("\n" + "-" * 40)
-    logger.info("PASO 5: Generando dashboard de visualizaciones")
-    logger.info("-" * 40)
-
-    try:
-        visualizar_resultados.generar_dashboard_completo(
-            modelo, resultados, mapeo_kill, args.dashboard_dir
-        )
-    except Exception as e:
-        logger.warning(f"No se pudieron generar todas las visualizaciones: {e}")
-        logger.warning("Asegúrate de tener instalado matplotlib y seaborn")
-
     # -----------------------------------------------------------------------
     # Resumen final
     # -----------------------------------------------------------------------
@@ -209,9 +190,9 @@ def main():
     logger.info("=" * 60)
     logger.info(f"📊 Modelo HMM: {args.modelo}")
     logger.info(f"📋 Reporte autores: {args.reporte_csv}")
-    logger.info(f"📈 Dashboard visual: {args.dashboard_dir}/")
     logger.info(f"🎯 Total autores analizados: {len(resultados)}")
     logger.info(f"✅ Predicciones generadas: {autores_ok}")
+    logger.info(f"💡 Visualiza los resultados con: streamlit run dashboard_hmm.py")
 
     return 0
 

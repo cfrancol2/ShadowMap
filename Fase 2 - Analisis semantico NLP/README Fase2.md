@@ -144,8 +144,7 @@ python -c "import transformers, torch; print('Dependencias instaladas correctame
 ### Ejecución con datos reales (desde Fase 1)
 
 ```bash
-cd modulos
-python main.py \
+python modulos/main.py \
     --input ../Datos/forum_records_clean.csv \
     --output-csv ../Datos/datos_enriquecidos.csv \
     --output-hmm ../Datos/secuencias_autores.json

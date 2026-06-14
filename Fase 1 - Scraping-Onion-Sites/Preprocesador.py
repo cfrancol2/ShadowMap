@@ -86,10 +86,11 @@ def preprocesar_csv(ruta_entrada: str, ruta_salida: str) -> None:
     df_final = df_filtrado[columnas_existentes]
 
     # Forzar tipos de datos para consistencia (antes de guardar)
-    # Cambia los tipos de texto a "string" para aprovechar las funcionalidades de pandas con cadenas
+    
     columnas_str = ['id_mensaje', 'huella_contenido', 'id_hilo', 'id_mensaje_padre',
                     'usuario', 'fecha_hora', 'titulo_limpio', 'cuerpo_limpio',
                     'texto_citado_limpio', 'url_original']
+    # Cambia los tipos de texto a "string" para aprovechar las funcionalidades de pandas con cadenas
     for col in columnas_str:
         if col in df_final.columns:
             df_final[col] = df_final[col].fillna('').astype("string")
