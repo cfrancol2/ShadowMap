@@ -1,15 +1,21 @@
 # Dependencias para Fase 2 - Analisis semantico NLP
 # ---------------------------------------------------------------
-# Instalación RÁPIDA (recomendado para Kali con poco espacio):
+# ⚠️ IMPORTANTE: Ejecuta estos pasos EN ORDEN:
+#
+# PASO 1 - Instalar PyTorch CPU-only (~200MB):
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#
+# PASO 2 - Instalar el resto:
 #   pip install transformers pandas numpy scikit-learn tqdm requests jsonlines python-dateutil
+#
+# ❌ NO ejecutes: pip install -r requirements.txt sin el Paso 1.
+#    PyTorch CUDA descarga ~1GB+ y puede llenar el disco en VMs.
 #
 # O usa el script automático:
 #   chmod +x install_linux.sh && ./install_linux.sh
 # ---------------------------------------------------------------
-
+# NOTA: torch se instala en el Paso 1. Ya no está en este archivo.
 transformers
-torch
 pandas
 numpy
 scikit-learn
@@ -19,15 +25,15 @@ requests
 jsonlines
 
 
-# INstalacion manual (si no quieres usar el script):
+# Instalación manual (si no quieres usar el script):
 # 1. Liberar espacio
-#pip cache purge
+#   pip cache purge
 
-# 2. Instalar PyTorch CPU (~200MB)
-#pip install torch --index-url https://download.pytorch.org/whl/cpu
+# 2. Instalar PyTorch CPU (~200MB) - OBLIGATORIO primero
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 # 3. Instalar resto
-#pip install transformers pandas numpy scikit-learn tqdm requests jsonlines
+#   pip install transformers pandas numpy scikit-learn tqdm requests jsonlines
 
 # 4. Verificar
-#python3 -c "import transformers; print(f'✅ transformers {transformers.__version__}')"
+#   python3 -c "import transformers; print(f'✅ transformers {transformers.__version__}')"

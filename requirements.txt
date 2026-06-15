@@ -4,7 +4,11 @@
 # Python 3.9+
 #
 # Instalación completa (todas las fases):
-#   pip install -r requirements.txt
+#   PASO 1: pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   PASO 2: pip install -r requirements.txt
+#
+# ⚠️ IMPORTANTE: Ejecuta el PASO 1 PRIMERO. Si no, pip intentará descargar
+#    PyTorch con CUDA (~1GB) que puede llenar el disco en VMs con poco espacio.
 #
 # Instalación mínima (solo dashboard + datos existentes):
 #   pip install streamlit pandas numpy plotly
@@ -29,9 +33,8 @@ requests-tor>=1.4
 # ==========================================
 # FASE 2 - NLP con SecureBERT
 # ==========================================
-# En Linux con pip, PyTorch CPU se instala por defecto (~200MB).
-# Si tienes GPU NVIDIA, instala CUDA primero:
-#   pip install torch --index-url https://download.pytorch.org/whl/cu118
+# PyTorch se instala por separado (ver instrucciones arriba).
+# CPU-only (~200MB) vs CUDA (~1GB+).
 torch>=2.0.0
 transformers>=4.36.0
 scikit-learn>=1.3.0
@@ -57,6 +60,7 @@ tqdm>=4.66.0
 # ==========================================
 # Solo dashboard:     pip install streamlit pandas numpy plotly
 # Fase 1:             sudo apt install tor && pip install beautifulsoup4 requests requests[socks] requests-tor pandas
-# Fase 2 (CPU):       pip install torch transformers pandas numpy scikit-learn tqdm python-dateutil requests jsonlines
+# Fase 2 (CPU):       pip install torch --index-url https://download.pytorch.org/whl/cpu
+#                     pip install transformers pandas numpy scikit-learn tqdm python-dateutil requests jsonlines
 # Fase 3:             pip install hmmlearn pandas numpy matplotlib seaborn tqdm
 # Desinstalar todo:   pip uninstall -y -r <(pip freeze)

@@ -22,6 +22,7 @@ import json
 import pickle
 import os
 import sys
+import signal
 import subprocess
 import threading
 import queue
