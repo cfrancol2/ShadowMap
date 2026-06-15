@@ -195,13 +195,21 @@ class EjecutorEnSegundoPlano:
     def _ejecutar_comando(self, comando, cwd):
         """Ejecuta el comando y captura la salida."""
         try:
+            # Forzar Python unbuffered para logs en tiempo real
+            env = os.environ.copy()
+            env["PYTHONUNBUFFERED"] = "1"
+            if "python " in comando or "python3 " in comando:
+                comando = comando.replace("python ", "python -u ", 1)
+                comando = comando.replace("python3 ", "python3 -u ", 1)
+
             self.proceso = subprocess.Popen(
                 comando,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                bufsize=1,
+                bufsize=0,  # Sin buffer
+                env=env,
                 cwd=str(cwd) if cwd else None
             )
 
@@ -503,19 +511,26 @@ with tab_f1:
     with col_logs:
         st.markdown("### 📜 Logs en Tiempo Real")
 
-        # Auto-refresh mientras ejecuta
-        if st.session_state.ejecutor_fase1.esta_ejecutando():
-            time.sleep(0.3)
-            st.rerun()
-
+        # Polling sin rerun para no reiniciar el script
         actualizar_logs('ejecutor_fase1', 'logs_fase1')
 
-        logs_container = st.container(height=400)
-        with logs_container:
+        logs_placeholder = st.empty()
+        with logs_placeholder.container():
             if st.session_state.logs_fase1:
-                st.code("\n".join(st.session_state.logs_fase1[-60:]), language="bash")
+                st.code("\n".join(st.session_state.logs_fase1[-80:]), language="bash")
             else:
                 st.info("No hay logs aún. Ejecuta un proceso.")
+
+        # Polling loop: se ejecuta N veces mientras el proceso está activo
+        if st.session_state.ejecutor_fase1.esta_ejecutando():
+            for _ in range(100):  # max ~10 segundos entre renders de Streamlit
+                if not st.session_state.ejecutor_fase1.esta_ejecutando():
+                    break
+                actualizar_logs('ejecutor_fase1', 'logs_fase1')
+                if st.session_state.logs_fase1:
+                    with logs_placeholder.container():
+                        st.code("\n".join(st.session_state.logs_fase1[-80:]), language="bash")
+                time.sleep(0.1)
 
     # Visualización de datos de Fase 1
     st.markdown("---")
@@ -597,17 +612,23 @@ with tab_f2:
     with col_logs2:
         st.markdown("### 📜 Logs en Tiempo Real")
 
-        if st.session_state.ejecutor_fase2.esta_ejecutando():
-            time.sleep(0.3)
-            st.rerun()
-
         actualizar_logs('ejecutor_fase2', 'logs_fase2')
-        logs_container2 = st.container(height=400)
-        with logs_container2:
+        logs_placeholder2 = st.empty()
+        with logs_placeholder2.container():
             if st.session_state.logs_fase2:
-                st.code("\n".join(st.session_state.logs_fase2[-60:]), language="bash")
+                st.code("\n".join(st.session_state.logs_fase2[-80:]), language="bash")
             else:
                 st.info("No hay logs aún. Ejecuta el NLP pipeline.")
+
+        if st.session_state.ejecutor_fase2.esta_ejecutando():
+            for _ in range(100):
+                if not st.session_state.ejecutor_fase2.esta_ejecutando():
+                    break
+                actualizar_logs('ejecutor_fase2', 'logs_fase2')
+                if st.session_state.logs_fase2:
+                    with logs_placeholder2.container():
+                        st.code("\n".join(st.session_state.logs_fase2[-80:]), language="bash")
+                time.sleep(0.1)
 
     # Visualización de datos de Fase 2
     st.markdown("---")
@@ -730,17 +751,23 @@ with tab_f3:
     with col_logs3:
         st.markdown("### 📜 Logs en Tiempo Real")
 
-        if st.session_state.ejecutor_fase3.esta_ejecutando():
-            time.sleep(0.3)
-            st.rerun()
-
         actualizar_logs('ejecutor_fase3', 'logs_fase3')
-        logs_container3 = st.container(height=400)
-        with logs_container3:
+        logs_placeholder3 = st.empty()
+        with logs_placeholder3.container():
             if st.session_state.logs_fase3:
-                st.code("\n".join(st.session_state.logs_fase3[-60:]), language="bash")
+                st.code("\n".join(st.session_state.logs_fase3[-80:]), language="bash")
             else:
                 st.info("No hay logs aún. Ejecuta el entrenamiento HMM.")
+
+        if st.session_state.ejecutor_fase3.esta_ejecutando():
+            for _ in range(100):
+                if not st.session_state.ejecutor_fase3.esta_ejecutando():
+                    break
+                actualizar_logs('ejecutor_fase3', 'logs_fase3')
+                if st.session_state.logs_fase3:
+                    with logs_placeholder3.container():
+                        st.code("\n".join(st.session_state.logs_fase3[-80:]), language="bash")
+                time.sleep(0.1)
 
     # Visualización de resultados HMM
     st.markdown("---")
