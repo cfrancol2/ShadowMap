@@ -3,7 +3,7 @@ beautifulsoup4==4.14.3
 requests==2.32.5
 requests[socks]==2.32.5
 requests-tor==1.4
-pand
+pandas
 # Cambios en la librería pandas pueden afectar la reproducibilidad, por eso se fija la versión
 
 # Dependencias transitivas fijadas para mayor reproducibilidad
