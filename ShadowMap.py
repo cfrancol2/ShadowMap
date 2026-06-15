@@ -97,6 +97,42 @@ class EjecutorEnSegundoPlano:
         self.hilo.start()
         return True
 
+    def detener(self):
+        """Detiene el proceso y todo su árbol de procesos hijos."""
+        if self.proceso is None:
+            return False
+
+        pid = self.proceso.pid
+        try:
+            if sys.platform == "win32":
+                # En Windows: taskkill mata todo el árbol de procesos
+                subprocess.run(
+                    f"taskkill /F /T /PID {pid}",
+                    shell=True,
+                    capture_output=True,
+                    timeout=5
+                )
+            else:
+                # En Linux/macOS: mata el grupo de procesos
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+                time.sleep(1)
+                try:
+                    os.killpg(os.getpgid(pid), signal.SIGKILL)
+                except:
+                    pass
+        except Exception as e:
+            try:
+                self.proceso.terminate()
+                time.sleep(0.5)
+                self.proceso.kill()
+            except:
+                pass
+
+        self.log_queue.put("⏹️ PROCESO DETENIDO POR USUARIO")
+        self.en_ejecucion = False
+        self.completado = True
+        return True
+
     def _ejecutar_comando(self, comando, cwd):
         """Ejecuta el comando y captura la salida."""
         try:
@@ -119,6 +155,8 @@ class EjecutorEnSegundoPlano:
 
             if self.codigo_salida == 0:
                 self.log_queue.put("✅ PROCESO COMPLETADO EXITOSAMENTE")
+            elif self.codigo_salida == -1:
+                pass  # Proceso terminado por el usuario
             else:
                 self.log_queue.put(f"❌ PROCESO FALLIDO (código: {self.codigo_salida})")
 
@@ -328,9 +366,8 @@ with tab_f1:
 
         if st.button("⏹️ Detener", use_container_width=True,
                      disabled=not st.session_state.ejecutor_fase1.esta_ejecutando()):
-            if st.session_state.ejecutor_fase1.proceso:
-                st.session_state.ejecutor_fase1.proceso.terminate()
-                st.warning("Proceso detenido")
+            st.session_state.ejecutor_fase1.detener()
+            st.warning("⏹️ Proceso detenido")
 
         if st.button("🗑️ Limpiar Logs", use_container_width=True):
             st.session_state.logs_fase1 = []
@@ -418,9 +455,8 @@ with tab_f2:
 
         if st.button("⏹️ Detener Fase 2", use_container_width=True,
                      disabled=not st.session_state.ejecutor_fase2.esta_ejecutando()):
-            if st.session_state.ejecutor_fase2.proceso:
-                st.session_state.ejecutor_fase2.proceso.terminate()
-                st.warning("Proceso detenido")
+            st.session_state.ejecutor_fase2.detener()
+            st.warning("⏹️ Proceso detenido")
 
         if st.button("🗑️ Limpiar Logs F2", use_container_width=True):
             st.session_state.logs_fase2 = []
@@ -545,9 +581,8 @@ with tab_f3:
 
         if st.button("⏹️ Detener Fase 3", use_container_width=True,
                      disabled=not st.session_state.ejecutor_fase3.esta_ejecutando()):
-            if st.session_state.ejecutor_fase3.proceso:
-                st.session_state.ejecutor_fase3.proceso.terminate()
-                st.warning("Proceso detenido")
+            st.session_state.ejecutor_fase3.detener()
+            st.warning("⏹️ Proceso detenido")
 
         if st.button("🗑️ Limpiar Logs F3", use_container_width=True):
             st.session_state.logs_fase3 = []

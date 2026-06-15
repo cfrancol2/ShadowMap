@@ -377,4 +377,4 @@ Los estados ocultos aprendidos por el HMM representan **perfiles de comportamien
 4. **Evaluación Temporal**: Validar predicciones contra datos futuros
 5. **Modelos Avanzados**: Comparar HMM con LSTM/Transformers para predicción de secuencias
 
-**¡La Fase 3 está completa y lista para integrarse con sistemas de alerta temprana! 🚀**
+**¡ShadowMap - Fase 3 completada! Listo para visualizar con el Dashboard Integrador. 🚀**
