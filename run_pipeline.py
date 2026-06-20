@@ -19,6 +19,7 @@ import argparse
 import os
 import sys
 import subprocess
+import urllib.request
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -92,6 +93,43 @@ def ejecutar_comando(comando, cwd=None):
 
 
 # ---------------------------------------------------------------------------
+# Verificacion de Tor
+# ---------------------------------------------------------------------------
+
+def verificar_tor():
+    """Verifica si hay conexion a la red Tor consultando icanhazip.com."""
+    print("\n  Verificando conexion a la red Tor...")
+    try:
+        # Primero intentar via proxy Tor (puerto local 9050)
+        proxy = urllib.request.ProxyHandler({
+            'http': 'socks5h://127.0.0.1:9050',
+            'https': 'socks5h://127.0.0.1:9050'
+        })
+        opener = urllib.request.build_opener(proxy)
+        opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
+        respuesta = opener.open('https://icanhazip.com', timeout=15)
+        ip = respuesta.read().decode().strip()
+        print(f"  [OK] Conexion Tor activa. IP de salida: {ip}")
+        return True
+    except Exception:
+        pass
+
+    # Intentar sin proxy (por si Whonix o configuracion global)
+    try:
+        respuesta = urllib.request.urlopen('https://icanhazip.com', timeout=10)
+        ip = respuesta.read().decode().strip()
+        print(f"  [OK] Conexion a internet activa. IP: {ip}")
+        print("  [AVISO] No se detecto proxy Tor local. Verifica la configuracion.")
+        return True
+    except Exception:
+        print("  [ERROR] No se pudo verificar la conexion a Tor.")
+        print("  Asegurate de que Tor este ejecutandose (puerto 9050).")
+        print("  En Kali Linux: sudo systemctl start tor")
+        print("  En Whonix: el Gateway enruta el trafico automaticamente.")
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Fases del pipeline
 # ---------------------------------------------------------------------------
 
@@ -113,6 +151,12 @@ def ejecutar_fase1():
         print(SEPARADOR)
         print("  FASE 1: Scraping de Foros .onion")
         print(SEPARADOR)
+        # Verificar conexion Tor antes de mostrar opciones
+        if not verificar_tor():
+            print("\n  [AVISO] Sin conexion Tor. Algunas funciones pueden no estar disponibles.")
+            continuar = input("  Deseas continuar de todas formas? (s/n): ").strip().lower()
+            if continuar != "s":
+                return 0
         print(f"  Parametros actuales:")
         print(f"    seeds={params['seeds']}, depth={params['max_depth']}, "
               f"delay={params['delay']}s, red={params['network_mode']}")
@@ -205,7 +249,7 @@ def ejecutar_fase2():
         print("""
   Opciones:
     1. Ejecutar pipeline NLP completo
-    2. Solo generar secuencias HMM (si ya tienes datos_enriquecidos.csv)
+    2. Solo generar secuencias HMM (si ya existe datos_enriquecidos.csv)
     3. Configurar parametros
     0. Volver
         """)
