@@ -31,6 +31,7 @@ Fase 3 - Modelo HMM/
 │   ├── predecir_siguiente.py      # Predicción de siguiente fase por autor
 │   └── __init__.py                # Inicializador del paquete
 ├── dashboard_hmm.py               # Dashboard interactivo Streamlit para visualizar resultados
+├── dashboard_ia.py                # Dashboard IA con Google Gemini para análisis en lenguaje natural
 ├── kill_chain_fases.json          # Mapeo MITRE → Cyber Kill Chain (87+ técnicas)
 ├── requirements.txt               # Dependencias completas
 └── README Fase3.md                # Esta documentación
@@ -81,7 +82,7 @@ Datos/
 | `cargar_secuencias.py` | Carga el JSON de la Fase 2, mapea técnicas MITRE a fases de Kill Chain (Opción A: fase más avanzada) |
 | `entrenar_hmm.py` | Entrena un `CategoricalHMM` con algoritmo Baum-Welch, guarda/carga modelo en pickle |
 | `predecir_siguiente.py` | Predice la siguiente fase usando Forward + Viterbi, genera reporte CSV por autor |
-| `visualizar_resultados.py` | Genera matriz de transición, distribución de estados, probabilidades y secuencias individuales |
+| `dashboard_ia.py` | Dashboard independiente con IA (DeepSeek, Mistral, Gemini, Groq) para análisis en lenguaje natural |
 
 ---
 
@@ -96,6 +97,7 @@ Datos/
 | `numpy` | ≥1.24.0 | Operaciones numéricas y álgebra lineal |
 | `matplotlib` | ≥3.7.0 | Generación de gráficos estáticos PNG |
 | `seaborn` | ≥0.12.0 | Heatmaps de matrices de transición |
+| `streamlit` | ≥1.30.0 | Dashboard interactivo para visualización de resultados |
 
 ---
 
@@ -121,8 +123,7 @@ python modulos/main.py \
     --input ../Datos/secuencias_autores.json \
     --kill-chain kill_chain_fases.json \
     --modelo ../Datos/modelo_hmm.pkl \
-    --reporte-csv ../Datos/reporte_autores.csv \
-    --dashboard-dir ../Dashboard_HMM
+    --reporte-csv ../Datos/reporte_autores.csv
 ```
 
 ### Parámetros Configurables
@@ -133,7 +134,6 @@ python modulos/main.py \
 | `--kill-chain` | `-k` | Ruta al JSON de mapeo Kill Chain | `kill_chain_fases.json` |
 | `--modelo` | `-m` | Ruta para guardar/cargar el modelo HMM | `../Datos/modelo_hmm.pkl` |
 | `--reporte-csv` | `-r` | Ruta para el reporte CSV de autores | `../Datos/reporte_autores.csv` |
-| `--dashboard-dir` | `-d` | Directorio para las visualizaciones | `../Dashboard_HMM` |
 | `--n-estados` | `-e` | Número de estados ocultos (perfiles) | `4` |
 | `--n-iter` | `-n` | Iteraciones máximas para entrenamiento | `100` |
 | `--retrain` | — | Forzar re-entrenamiento aunque exista modelo guardado | `False` |
@@ -215,6 +215,24 @@ Para ejecutarlo:
 streamlit run dashboard_hmm.py
 ```
 
+### 4. Dashboard IA (`dashboard_ia.py`)
+
+Dashboard independiente que utiliza **inteligencia artificial** para generar análisis en lenguaje natural de los resultados del HMM.
+
+**Proveedores soportados (todos con tier gratuito):**
+
+| Proveedor | Modelo | Cuota Gratis | Registro |
+|-----------|--------|-------------|----------|
+| **DeepSeek** | V3 / R1 | $5 de crédito | [platform.deepseek.com](https://platform.deepseek.com) |
+| **Mistral** | Small / Large | Créditos iniciales | [console.mistral.ai](https://console.mistral.ai) |
+| **Google Gemini** | 2.0 Flash | 15 req/min | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| **Groq** | Llama 3.3 70B | 30 req/min | [console.groq.com](https://console.groq.com/keys) |
+
+Ejecución:
+```bash
+streamlit run dashboard_ia.py
+```
+
 ---
 
 ## 🛠️ Pipeline Detallado
@@ -253,13 +271,19 @@ Para cada autor con ≥2 posts:
 
 Genera un archivo CSV tabular con todos los autores, su estado dominante, la fase predicha y la confianza.
 
-### Paso 5: Dashboard visual (`visualizar_resultados.py`)
+### Paso 5: Dashboard interactivo (`dashboard_hmm.py`)
 
-Genera 4 tipos de visualizaciones usando `matplotlib` + `seaborn`:
-- **Matriz de transición**: Heatmap que muestra cómo los estados ocultos transicionan entre sí
-- **Distribución de estados**: Barras con la cantidad de autores por perfil de comportamiento
-- **Probabilidades de predicción**: Barras horizontales con la probabilidad promedio de cada fase
-- **Secuencias individuales**: Líneas de tiempo para los top 5 autores más representativos
+Dashboard interactivo desarrollado con **Streamlit** para visualizar los resultados del modelo HMM en tiempo real:
+- **Matriz de Transición**: Heatmap interactivo de probabilidades entre estados ocultos
+- **Probabilidades de Emisión**: Heatmap y gráficos por cada estado oculto
+- **Análisis por Atacante**: Selector de autor con predicción de siguiente fase y probabilidades
+- **Reporte General**: Tabla con filtros, gráficos de distribución y descarga CSV/JSON
+- **Estados del Modelo**: Parámetros, matrices completas y diagrama Sankey de flujo
+
+Ejecución:
+```bash
+streamlit run dashboard_hmm.py
+```
 
 ---
 
@@ -363,6 +387,7 @@ Los estados ocultos aprendidos por el HMM representan **perfiles de comportamien
 3. ✅ Predicción de siguiente fase para autores con ≥2 posts
 4. ✅ Generación de reporte CSV con confianza de predicción
 5. ✅ Dashboard visual con matriz de transición, distribución y secuencias
+5b. ✅ Dashboard IA con análisis en lenguaje natural (múltiples proveedores: DeepSeek, Mistral, Gemini, Groq)
 6. ✅ Reanudación inteligente (carga de modelo guardado sin reentrenar)
 7. ✅ Logging completo y manejo de errores robusto
 8. ✅ Compatibilidad con salida de Fase 2 (`secuencias_autores.json`)
@@ -373,8 +398,7 @@ Los estados ocultos aprendidos por el HMM representan **perfiles de comportamien
 
 1. **Sistema de Alertas**: Notificar cuando un autor se acerque a fase crítica
 2. **Clustering de Autores**: Agrupar por perfil de comportamiento para análisis de redes
-3. **Dashboard Interactivo**: Streamlit para visualización en tiempo real
-4. **Evaluación Temporal**: Validar predicciones contra datos futuros
-5. **Modelos Avanzados**: Comparar HMM con LSTM/Transformers para predicción de secuencias
+3. **Evaluación Temporal**: Validar predicciones contra datos futuros
+4. **Modelos Avanzados**: Comparar HMM con LSTM/Transformers para predicción de secuencias
 
 **¡ShadowMap - Fase 3 completada! Listo para visualizar con el Dashboard Integrador. 🚀**

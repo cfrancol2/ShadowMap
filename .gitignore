@@ -9,3 +9,16 @@ Imágnes/
 *.doc
 *.docx
 *.tmp
+
+# Archivos generados
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+*.log
+hmm_processing_log.txt
+processing_log.txt
+Datos/
+
+# Archivos temporales de análisis
+analisis_*.py

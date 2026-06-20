@@ -93,6 +93,14 @@ def main():
         "--retrain", action="store_true",
         help="Forzar re-entrenamiento aunque exista un modelo guardado"
     )
+    parser.add_argument(
+        "--omitir-sin-tecnicas", action="store_true", default=True,
+        help="Omitir posts sin técnicas MITRE reconocidas (recomendado, default: True)"
+    )
+    parser.add_argument(
+        "--incluir-sin-tecnicas", action="store_true",
+        help="Incluir posts sin técnicas asignándoles fase por defecto (desactiva --omitir-sin-tecnicas)"
+    )
 
     args = parser.parse_args()
 
@@ -109,8 +117,9 @@ def main():
     logger.info("PASO 1: Cargando secuencias de autores")
     logger.info("-" * 40)
 
+    omitir = not args.incluir_sin_tecnicas
     secuencias, metadatos, mapeo_kill = cargar_secuencias.cargar_secuencias(
-        args.input, args.kill_chain
+        args.input, args.kill_chain, omitir_sin_tecnicas=omitir
     )
 
     if not secuencias:

@@ -87,7 +87,8 @@ def tecnica_a_fase(tecnicas: List[str], mapeo: dict, fase_defecto: int) -> int:
     return fase_max if fase_max >= 0 else fase_defecto
 
 
-def cargar_secuencias(ruta_json: str, ruta_mapeo: str) -> Tuple[Dict[str, List[int]], Dict[str, Any], dict]:
+def cargar_secuencias(ruta_json: str, ruta_mapeo: str,
+                      omitir_sin_tecnicas: bool = True) -> Tuple[Dict[str, List[int]], Dict[str, Any], dict]:
     """
     Carga las secuencias del JSON de la Fase 2, mapea técnicas a fases
     y prepara los datos para el HMM.
@@ -98,6 +99,10 @@ def cargar_secuencias(ruta_json: str, ruta_mapeo: str) -> Tuple[Dict[str, List[i
         Ruta al archivo JSON con secuencias de autores (secuencias_autores.json).
     ruta_mapeo : str
         Ruta al archivo de mapeo Kill Chain.
+    omitir_sin_tecnicas : bool
+        Si True, omite posts sin técnicas reconocidas en lugar de asignarles
+        la fase por defecto. Esto mejora significativamente la calidad de los
+        datos de entrenamiento (recomendado: True).
 
     Retorna
     -------
@@ -124,12 +129,19 @@ def cargar_secuencias(ruta_json: str, ruta_mapeo: str) -> Tuple[Dict[str, List[i
 
     secuencias_por_autor = {}
     total_posts = 0
-    autores_sin_tecnicas = 0
+    posts_omitidos = 0
+    autores_sin_posts = 0
 
     for nombre_usuario, posts in sequences_raw.items():
         secuencia_fases = []
         for post in posts:
             tecnicas = post.get('tecnicas_mitre', []) or post.get('mitre_techniques', [])
+
+            # Si no hay técnicas reconocidas y se pide omitir, saltar el post
+            if omitir_sin_tecnicas and not tecnicas:
+                posts_omitidos += 1
+                continue
+
             fase = tecnica_a_fase(tecnicas, mapeo_kill_chain, fase_defecto)
             secuencia_fases.append(fase)
             total_posts += 1
@@ -137,9 +149,13 @@ def cargar_secuencias(ruta_json: str, ruta_mapeo: str) -> Tuple[Dict[str, List[i
         if secuencia_fases:
             secuencias_por_autor[nombre_usuario] = secuencia_fases
         else:
-            autores_sin_tecnicas += 1
+            autores_sin_posts += 1
 
     logger.info(f"Secuencias cargadas: {len(secuencias_por_autor)} autores, {total_posts} posts totales")
+    if posts_omitidos > 0:
+        logger.info(f"Posts omitidos (sin técnicas reconocidas): {posts_omitidos}")
+    if autores_sin_posts > 0:
+        logger.info(f"Autores descartados (sin posts válidos): {autores_sin_posts}")
 
     num_fases = len(mapeo_kill_chain['metadata']['fases'])
     logger.info(f"Total de fases de Kill Chain: {num_fases}")

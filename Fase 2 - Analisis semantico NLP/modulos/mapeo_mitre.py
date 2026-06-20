@@ -12,15 +12,33 @@ Funciones exportadas:
 """
 
 import logging
+import re
 from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
+
+
+def _normalizar_texto(texto: str) -> str:
+    """
+    Normaliza texto para matching flexible:
+    - Minúsculas
+    - Eliminar espacios extra, guiones, puntos, barras bajas
+    """
+    texto = texto.lower().strip()
+    texto = re.sub(r'[\s\-_./]+', ' ', texto)
+    texto = re.sub(r'\s+', ' ', texto)
+    return texto
 
 
 def mapear_a_mitre(entidades: List[Dict[str, Any]], mapeo_mitre: dict) -> List[str]:
     """
     Mapea las entidades detectadas por NER a técnicas MITRE ATT&CK
     usando un diccionario de mapeo predefinido.
+
+    Implementa matching flexible:
+    1. Coincidencia exacta (case-insensitive)
+    2. Coincidencia con normalización (sin espacios/guiones)
+    3. Coincidencia por subcadena
 
     Parámetros
     ----------
@@ -39,10 +57,32 @@ def mapear_a_mitre(entidades: List[Dict[str, Any]], mapeo_mitre: dict) -> List[s
     """
     tecnicas = set()
 
+    # Pre-normalizar las claves del mapeo para matching rápido
+    claves_normalizadas = {}
+    for clave, tecnicas_asociadas in mapeo_mitre.items():
+        clave_norm = _normalizar_texto(clave)
+        claves_normalizadas[clave_norm] = tecnicas_asociadas
+
     for entidad in entidades:
-        texto_entidad = entidad['text'].lower()
-        for clave, tecnicas_asociadas in mapeo_mitre.items():
-            if clave.lower() in texto_entidad:
+        texto_original = entidad['text']
+        texto_lower = texto_original.lower()
+        texto_norm = _normalizar_texto(texto_original)
+
+        for clave_norm, tecnicas_asociadas in claves_normalizadas.items():
+            # Matching 1: coincidencia normalizada (sin espacios/guiones)
+            if clave_norm in texto_norm:
+                tecnicas.update(tecnicas_asociadas)
+                continue
+
+            # Matching 2: coincidencia por subcadena en texto original
+            if clave_norm in texto_lower:
+                tecnicas.update(tecnicas_asociadas)
+                continue
+
+            # Matching 3: si la clave tiene espacio, buscar sin espacio también
+            clave_sin_espacios = clave_norm.replace(' ', '')
+            texto_sin_espacios = texto_norm.replace(' ', '')
+            if clave_sin_espacios and clave_sin_espacios in texto_sin_espacios:
                 tecnicas.update(tecnicas_asociadas)
 
     return sorted(list(tecnicas))

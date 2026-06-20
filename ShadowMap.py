@@ -22,12 +22,10 @@ import json
 import pickle
 import os
 import sys
-import signal
 import subprocess
 import threading
 import queue
 import time
-import socket
 from datetime import datetime
 from collections import Counter
 from pathlib import Path
@@ -65,63 +63,6 @@ ARCHIVOS_DATOS = {
 
 COLORES_FASES = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c']
 NOMBRES_FASES = ["Reconocimiento", "Entrega", "Explotación", "Instalación", "C2", "Acciones"]
-
-# ---------------------------------------------------------------------------
-# Gestor de Tor
-# ---------------------------------------------------------------------------
-
-class GestorTor:
-    """Verifica, inicia y detiene Tor (SOCKS5 en 127.0.0.1:9050)."""
-
-    PUERTO_SOCKS = 9050
-    PUERTO_CONTROL = 9051
-
-    @staticmethod
-    def verificar_tor() -> dict:
-        """
-        Verifica si Tor está corriendo en los puertos esperados.
-        Retorna dict con: corriendo, puerto_socks, error
-        """
-        resultado = {"corriendo": False, "puerto_socks": GestorTor.PUERTO_SOCKS, "error": None}
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(2)
-            socks_open = sock.connect_ex(('127.0.0.1', GestorTor.PUERTO_SOCKS)) == 0
-            sock.close()
-            resultado["corriendo"] = socks_open
-        except Exception as e:
-            resultado["error"] = str(e)
-        return resultado
-
-    @staticmethod
-    def iniciar_tor() -> subprocess.Popen:
-        """Intenta iniciar Tor en un subproceso."""
-        posibles_tor = ["tor"]
-        if sys.platform == "win32":
-            pf = os.environ.get("ProgramFiles", "C:\\Program Files")
-            tb = os.path.join(pf, "Tor Browser", "Browser", "TorBrowser", "Tor", "tor.exe")
-            if os.path.exists(tb):
-                posibles_tor.insert(0, tb)
-        for cmd in posibles_tor:
-            try:
-                p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
-                time.sleep(3)
-                if p.poll() is None:
-                    return p
-                p.stdout.close()
-            except:
-                continue
-        return None
-
-    @staticmethod
-    def detener_tor(proceso):
-        if proceso and proceso.poll() is None:
-            proceso.terminate()
-            try:
-                proceso.wait(timeout=5)
-            except:
-                proceso.kill()
-
 
 # ---------------------------------------------------------------------------
 # Gestor de ejecución en segundo plano
@@ -195,9 +136,7 @@ class EjecutorEnSegundoPlano:
     def _ejecutar_comando(self, comando, cwd):
         """Ejecuta el comando y captura la salida."""
         try:
-            # Forzar Python unbuffered para logs en tiempo real
-            env = os.environ.copy()
-            env["PYTHONUNBUFFERED"] = "1"
+            # Forzar salida sin buffer para logs en tiempo real
             if "python " in comando or "python3 " in comando:
                 comando = comando.replace("python ", "python -u ", 1)
                 comando = comando.replace("python3 ", "python3 -u ", 1)
@@ -208,8 +147,7 @@ class EjecutorEnSegundoPlano:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                bufsize=0,  # Sin buffer
-                env=env,
+                bufsize=0,
                 cwd=str(cwd) if cwd else None
             )
 
@@ -271,6 +209,14 @@ def actualizar_logs(executor_key, log_key):
     nuevos = ejecutor.obtener_logs()
     if nuevos:
         st.session_state[log_key].extend(nuevos)
+
+
+def rerun_seguro():
+    """rerun que no crashea si el event loop ya está cerrado."""
+    try:
+        st.rerun()
+    except RuntimeError:
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -406,90 +352,30 @@ tab_f1, tab_f2, tab_f3, tab_global, tab_datos = st.tabs([
 with tab_f1:
     st.subheader("🌐 Fase 1: Scraping de Foros .onion")
 
-    # ------------------------------------------------------------------
-    # Gestión de Tor
-    # ------------------------------------------------------------------
-    with st.expander("🔄 Gestión de Tor", expanded=True):
-        col_tor_est, col_tor_btn = st.columns([1, 2])
-
-        with col_tor_est:
-            if 'tor_verificado' not in st.session_state:
-                st.session_state.tor_verificado = False
-            if 'proceso_tor' not in st.session_state:
-                st.session_state.proceso_tor = None
-
-            estado_tor = GestorTor.verificar_tor()
-            st.session_state.tor_verificado = estado_tor["corriendo"]
-
-            if estado_tor["corriendo"]:
-                st.markdown("""
-                <div style="background:#d4edda;padding:12px;border-radius:10px;text-align:center;">
-                    <span style="font-size:32px;">🟢</span>
-                    <p style="font-weight:bold;margin:3px 0;">Tor ACTIVO</p>
-                    <p style="font-size:11px;margin:0;">SOCKS5 127.0.0.1:9050</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div style="background:#f8d7da;padding:12px;border-radius:10px;text-align:center;">
-                    <span style="font-size:32px;">🔴</span>
-                    <p style="font-weight:bold;margin:3px 0;">Tor DETENIDO</p>
-                    <p style="font-size:11px;margin:0;">No se detecta en 127.0.0.1:9050</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-        with col_tor_btn:
-            st.markdown("**Acciones**")
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                if st.button("🚀 Iniciar Tor", use_container_width=True, disabled=estado_tor["corriendo"]):
-                    with st.spinner("Iniciando Tor..."):
-                        p = GestorTor.iniciar_tor()
-                        if p:
-                            st.session_state.proceso_tor = p
-                            time.sleep(8)
-                            if GestorTor.verificar_tor()["corriendo"]:
-                                st.session_state.tor_verificado = True
-                                st.success("✅ Tor iniciado")
-                            else:
-                                st.warning("⚠️ Tor iniciado, espera unos segundos")
-                        else:
-                            st.error("❌ No se pudo iniciar Tor. ¿Está instalado?")
-                if st.button("🔄 Verificar", use_container_width=True):
-                    st.rerun()
-            with col_b2:
-                if st.button("⏹️ Detener Tor", use_container_width=True, disabled=not estado_tor["corriendo"]):
-                    if st.session_state.proceso_tor:
-                        GestorTor.detener_tor(st.session_state.proceso_tor)
-                        st.session_state.proceso_tor = None
-                        st.success("Tor detenido")
-                        time.sleep(1)
-                        st.rerun()
-
-    # ------------------------------------------------------------------
-    # Ejecución
-    # ------------------------------------------------------------------
     col_ejec, col_logs = st.columns([1, 2])
 
     with col_ejec:
-        st.markdown("### ▶️ Ejecutar Pipeline")
-
-        if not st.session_state.tor_verificado:
-            st.warning("⚠️ Tor no activo. El scraper fallará sin Tor.")
+        st.markdown("### ▶️ Ejecutar Pipeline Fase 1")
 
         if st.button("🔍 Ejecutar Scraper", use_container_width=True,
                      disabled=st.session_state.ejecutor_fase1.esta_ejecutando()):
             comando = 'python forum_scraper.py --seeds seeds.txt --keywords identifiers.txt --max-depth 2 --delay 5 --csv-out ../Datos/forum_records.csv'
             st.session_state.logs_fase1 = []
-            st.session_state.ejecutor_fase1.ejecutar(comando, RUTA_FASE1)
-            st.success("Ejecutando scraper...")
+            exito = st.session_state.ejecutor_fase1.ejecutar(comando, RUTA_FASE1)
+            if exito:
+                st.success("Ejecutando scraper...")
+            else:
+                st.error("Ya hay un proceso en ejecución")
 
         if st.button("🧹 Ejecutar Preprocesador", use_container_width=True,
                      disabled=st.session_state.ejecutor_fase1.esta_ejecutando()):
             comando = 'python Preprocesador.py --input ../Datos/forum_records.csv --output ../Datos/forum_records_clean.csv'
             st.session_state.logs_fase1 = []
-            st.session_state.ejecutor_fase1.ejecutar(comando, RUTA_FASE1)
-            st.success("Ejecutando preprocesador...")
+            exito = st.session_state.ejecutor_fase1.ejecutar(comando, RUTA_FASE1)
+            if exito:
+                st.success("Ejecutando preprocesador...")
+            else:
+                st.error("Ya hay un proceso en ejecución")
 
         if st.button("⏹️ Detener", use_container_width=True,
                      disabled=not st.session_state.ejecutor_fase1.esta_ejecutando()):
@@ -510,27 +396,15 @@ with tab_f1:
 
     with col_logs:
         st.markdown("### 📜 Logs en Tiempo Real")
-
-        # Polling sin rerun para no reiniciar el script
         actualizar_logs('ejecutor_fase1', 'logs_fase1')
-
         logs_placeholder = st.empty()
         with logs_placeholder.container():
             if st.session_state.logs_fase1:
                 st.code("\n".join(st.session_state.logs_fase1[-80:]), language="bash")
             else:
                 st.info("No hay logs aún. Ejecuta un proceso.")
-
-        # Polling loop: se ejecuta N veces mientras el proceso está activo
         if st.session_state.ejecutor_fase1.esta_ejecutando():
-            for _ in range(100):  # max ~10 segundos entre renders de Streamlit
-                if not st.session_state.ejecutor_fase1.esta_ejecutando():
-                    break
-                actualizar_logs('ejecutor_fase1', 'logs_fase1')
-                if st.session_state.logs_fase1:
-                    with logs_placeholder.container():
-                        st.code("\n".join(st.session_state.logs_fase1[-80:]), language="bash")
-                time.sleep(0.1)
+            rerun_seguro()
 
     # Visualización de datos de Fase 1
     st.markdown("---")
@@ -611,7 +485,6 @@ with tab_f2:
 
     with col_logs2:
         st.markdown("### 📜 Logs en Tiempo Real")
-
         actualizar_logs('ejecutor_fase2', 'logs_fase2')
         logs_placeholder2 = st.empty()
         with logs_placeholder2.container():
@@ -619,16 +492,8 @@ with tab_f2:
                 st.code("\n".join(st.session_state.logs_fase2[-80:]), language="bash")
             else:
                 st.info("No hay logs aún. Ejecuta el NLP pipeline.")
-
         if st.session_state.ejecutor_fase2.esta_ejecutando():
-            for _ in range(100):
-                if not st.session_state.ejecutor_fase2.esta_ejecutando():
-                    break
-                actualizar_logs('ejecutor_fase2', 'logs_fase2')
-                if st.session_state.logs_fase2:
-                    with logs_placeholder2.container():
-                        st.code("\n".join(st.session_state.logs_fase2[-80:]), language="bash")
-                time.sleep(0.1)
+            rerun_seguro()
 
     # Visualización de datos de Fase 2
     st.markdown("---")
@@ -750,7 +615,6 @@ with tab_f3:
 
     with col_logs3:
         st.markdown("### 📜 Logs en Tiempo Real")
-
         actualizar_logs('ejecutor_fase3', 'logs_fase3')
         logs_placeholder3 = st.empty()
         with logs_placeholder3.container():
@@ -758,16 +622,8 @@ with tab_f3:
                 st.code("\n".join(st.session_state.logs_fase3[-80:]), language="bash")
             else:
                 st.info("No hay logs aún. Ejecuta el entrenamiento HMM.")
-
         if st.session_state.ejecutor_fase3.esta_ejecutando():
-            for _ in range(100):
-                if not st.session_state.ejecutor_fase3.esta_ejecutando():
-                    break
-                actualizar_logs('ejecutor_fase3', 'logs_fase3')
-                if st.session_state.logs_fase3:
-                    with logs_placeholder3.container():
-                        st.code("\n".join(st.session_state.logs_fase3[-80:]), language="bash")
-                time.sleep(0.1)
+            rerun_seguro()
 
     # Visualización de resultados HMM
     st.markdown("---")
