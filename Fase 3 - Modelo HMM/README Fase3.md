@@ -30,8 +30,7 @@ Fase 3 - Modelo HMM/
 │   ├── entrenar_hmm.py            # Entrenamiento del modelo CategoricalHMM
 │   ├── predecir_siguiente.py      # Predicción de siguiente fase por autor
 │   └── __init__.py                # Inicializador del paquete
-├── dashboard_hmm.py               # Dashboard interactivo Streamlit para visualizar resultados
-├── dashboard_ia.py                # Dashboard IA con Google Gemini para análisis en lenguaje natural
+├── dashboard_ia.py                # Dashboard IA con múltiples proveedores para análisis en lenguaje natural
 ├── kill_chain_fases.json          # Mapeo MITRE → Cyber Kill Chain (87+ técnicas)
 ├── requirements.txt               # Dependencias completas
 └── README Fase3.md                # Esta documentación
@@ -70,7 +69,7 @@ Datos/
                              │
                              ▼
                     ┌──────────────────────┐
-                    │  dashboard_hmm.py    │ ← Visualización Streamlit
+                    │   dashboard_ia.py    │ ← Dashboard IA Streamlit
                     └──────────────────────┘
 ```
 
@@ -200,22 +199,7 @@ Modelo serializado con `pickle` que contiene:
 | `confianza_prediccion` | `float` | Probabilidad de la predicción (0.0 - 1.0) |
 | `mensaje` | `str` | Estado del análisis ("OK" o "Secuencia demasiado corta") |
 
-### 3. Dashboard Interactivo (`dashboard_hmm.py`)
-
-Dashboard interactivo con **Streamlit** para visualizar todos los resultados del modelo HMM:
-
-- **📈 Matriz de Transición**: Heatmap interactivo de probabilidades entre estados ocultos
-- **📊 Probabilidades de Emisión**: Heatmap y gráficos por cada estado oculto
-- **🔍 Análisis por Atacante**: Selector de autor con predicción de siguiente fase y probabilidades
-- **📋 Reporte General**: Tabla con filtros, gráficos de distribución y descarga CSV/JSON
-- **⚙️ Estados del Modelo**: Parámetros, matrices completas y diagrama Sankey de flujo
-
-Para ejecutarlo:
-```bash
-streamlit run dashboard_hmm.py
-```
-
-### 4. Dashboard IA (`dashboard_ia.py`)
+### 3. Dashboard IA (`dashboard_ia.py`)
 
 Dashboard independiente que utiliza **inteligencia artificial** para generar análisis en lenguaje natural de los resultados del HMM.
 
@@ -271,18 +255,13 @@ Para cada autor con ≥2 posts:
 
 Genera un archivo CSV tabular con todos los autores, su estado dominante, la fase predicha y la confianza.
 
-### Paso 5: Dashboard interactivo (`dashboard_hmm.py`)
+### Paso 5: Dashboard IA (`dashboard_ia.py`)
 
-Dashboard interactivo desarrollado con **Streamlit** para visualizar los resultados del modelo HMM en tiempo real:
-- **Matriz de Transición**: Heatmap interactivo de probabilidades entre estados ocultos
-- **Probabilidades de Emisión**: Heatmap y gráficos por cada estado oculto
-- **Análisis por Atacante**: Selector de autor con predicción de siguiente fase y probabilidades
-- **Reporte General**: Tabla con filtros, gráficos de distribución y descarga CSV/JSON
-- **Estados del Modelo**: Parámetros, matrices completas y diagrama Sankey de flujo
+Dashboard interactivo con **Streamlit** e **inteligencia artificial** para análisis en lenguaje natural de los resultados del HMM.
 
 Ejecución:
 ```bash
-streamlit run dashboard_hmm.py
+streamlit run dashboard_ia.py
 ```
 
 ---
@@ -386,8 +365,7 @@ Los estados ocultos aprendidos por el HMM representan **perfiles de comportamien
 2. ✅ Entrenamiento exitoso del modelo CategoricalHMM con Baum-Welch
 3. ✅ Predicción de siguiente fase para autores con ≥2 posts
 4. ✅ Generación de reporte CSV con confianza de predicción
-5. ✅ Dashboard visual con matriz de transición, distribución y secuencias
-5b. ✅ Dashboard IA con análisis en lenguaje natural (múltiples proveedores: DeepSeek, Mistral, Gemini, Groq)
+5. ✅ Dashboard IA con análisis en lenguaje natural (múltiples proveedores: DeepSeek, Mistral, Gemini, Groq)
 6. ✅ Reanudación inteligente (carga de modelo guardado sin reentrenar)
 7. ✅ Logging completo y manejo de errores robusto
 8. ✅ Compatibilidad con salida de Fase 2 (`secuencias_autores.json`)

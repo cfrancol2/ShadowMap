@@ -201,7 +201,7 @@ def main():
     logger.info(f"📋 Reporte autores: {args.reporte_csv}")
     logger.info(f"🎯 Total autores analizados: {len(resultados)}")
     logger.info(f"✅ Predicciones generadas: {autores_ok}")
-    logger.info(f"💡 Visualiza los resultados con: streamlit run dashboard_hmm.py")
+    logger.info(f"💡 Visualiza los resultados con: streamlit run dashboard_ia.py")
 
     return 0
 
