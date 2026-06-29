@@ -4,21 +4,22 @@
 
 ---
 
-## 📋 Descripción General
+## Descripción General
 
 Esta fase implementa un **Modelo Oculto de Markov (HMM)** para analizar y predecir el comportamiento de autores en foros de la Dark Web. Utilizando las secuencias de técnicas MITRE ATT&CK generadas en la Fase 2, el modelo aprende patrones de transición entre fases de la **Cyber Kill Chain** y predice el siguiente movimiento probable de cada autor.
 
-### 🎯 Objetivos Principales
+### Objetivos Principales
 
 1. **Mapeo a Cyber Kill Chain**: Convertir técnicas MITRE ATT&CK en fases discretas (0-5) de la Kill Chain
 2. **Modelado de Comportamiento**: Entrenar un HMM categórico que capture patrones de transición entre fases
 3. **Predicción de Siguiente Fase**: Para cada autor, predecir la fase más probable de su próxima acción
 4. **Identificación de Perfiles**: Descubrir estados ocultos que representan perfiles de comportamiento atacante
 5. **Visualización**: Generar dashboard con matrices de transición, distribuciones y secuencias individuales
+6. **Evaluación**: Validar el modelo con métricas de Precisión, Recall y F1-score
 
 ---
 
-## 🏗️ Arquitectura del Sistema (Modular)
+## Arquitectura del Sistema (Modular)
 
 La Fase 3 está organizada en **módulos independientes** con nombres descriptivos en español.
 
@@ -29,6 +30,7 @@ Fase 3 - Modelo HMM/
 │   ├── cargar_secuencias.py       # Carga y mapeo de técnicas MITRE a Kill Chain
 │   ├── entrenar_hmm.py            # Entrenamiento del modelo CategoricalHMM
 │   ├── predecir_siguiente.py      # Predicción de siguiente fase por autor
+│   ├── evaluar_hmm.py             # Evaluación: Precisión, Recall, F1-score, Matriz de Confusión
 │   └── __init__.py                # Inicializador del paquete
 ├── dashboard_ia.py                # Dashboard IA con múltiples proveedores para análisis en lenguaje natural
 ├── kill_chain_fases.json          # Mapeo MITRE → Cyber Kill Chain (87+ técnicas)
@@ -67,25 +69,29 @@ Datos/
                     │ reporte_autores.csv    │ ← Reporte CSV
                     └────────────────────────┘
                              │
-                             ▼
-                    ┌──────────────────────┐
-                    │   dashboard_ia.py    │ ← Dashboard IA Streamlit
-                    └──────────────────────┘
+                ┌────────────┼────────────┐
+                ▼            ▼            ▼
+    ┌─────────────────┐ ┌──────────┐ ┌──────────────┐
+    │evaluar_hmm.py   │ │dashboard_│ │ Streamlit    │
+    │métricas y       │ │ia.py     │ │ dashboard    │
+    │confusión        │ │          │ │              │
+    └─────────────────┘ └──────────┘ └──────────────┘
 ```
 
 ### Responsabilidad de cada Módulo
 
 | Módulo | Responsabilidad |
 |--------|----------------|
-| `main.py` | Orquesta todo el pipeline: carga secuencias → entrena HMM → predice → visualiza |
+| `main.py` | Orquesta todo el pipeline: carga secuencias → entrena HMM → predice → evalúa → visualiza |
 | `cargar_secuencias.py` | Carga el JSON de la Fase 2, mapea técnicas MITRE a fases de Kill Chain (Opción A: fase más avanzada) |
 | `entrenar_hmm.py` | Entrena un `CategoricalHMM` con algoritmo Baum-Welch, guarda/carga modelo en pickle |
 | `predecir_siguiente.py` | Predice la siguiente fase usando Forward + Viterbi, genera reporte CSV por autor |
+| `evaluar_hmm.py` | Evalúa el modelo con Precisión, Recall, F1-score, matriz de confusión y hold-out validation |
 | `dashboard_ia.py` | Dashboard independiente con IA (DeepSeek, Mistral, Gemini, Groq) para análisis en lenguaje natural |
 
 ---
 
-## 🔧 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Librerías Principales
 
@@ -95,12 +101,13 @@ Datos/
 | `pandas` | ≥2.0.0 | Manipulación de datos tabulares y reportes CSV |
 | `numpy` | ≥1.24.0 | Operaciones numéricas y álgebra lineal |
 | `matplotlib` | ≥3.7.0 | Generación de gráficos estáticos PNG |
-| `seaborn` | ≥0.12.0 | Heatmaps de matrices de transición |
+| `seaborn` | ≥0.12.0 | Heatmaps de matrices de transición y confusión |
+| `scikit-learn` | ≥1.3.0 | Métricas de clasificación (Precisión, Recall, F1) |
 | `streamlit` | ≥1.30.0 | Dashboard interactivo para visualización de resultados |
 
 ---
 
-## 🚀 Ejecución del Pipeline
+## Ejecución del Pipeline
 
 ### Requisitos Previos
 
@@ -136,6 +143,8 @@ python modulos/main.py \
 | `--n-estados` | `-e` | Número de estados ocultos (perfiles) | `4` |
 | `--n-iter` | `-n` | Iteraciones máximas para entrenamiento | `100` |
 | `--retrain` | — | Forzar re-entrenamiento aunque exista modelo guardado | `False` |
+| `--evaluar` | — | Ejecutar evaluación del modelo con métricas de clasificación | `False` |
+| `--evaluacion-ruta` | — | Directorio de salida para los reportes de evaluación | `../Datos/evaluacion` |
 
 ### Ejemplo de ejecución con parámetros personalizados
 
@@ -148,9 +157,25 @@ python modulos/main.py \
     --retrain
 ```
 
+### Ejecutar con evaluación completa
+
+```bash
+python modulos/main.py \
+    -i ../Datos/secuencias_autores.json \
+    -k kill_chain_fases.json \
+    --evaluar \
+    --evaluacion-ruta ../Datos/evaluacion
+```
+
+Esto generará:
+- `../Datos/evaluacion/reporte_evaluacion.csv` — Métricas de Precisión, Recall, F1-score
+- `../Datos/evaluacion/matriz_confusion.png` — Heatmap de la matriz de confusión
+- `../Datos/evaluacion/grafico_metricas.png` — Gráfico de barras por fase
+- `../Datos/evaluacion/grafico_confianza.png` — Histograma de confianza
+
 ---
 
-## 🧠 Modelo HMM: Fundamentos
+## Modelo HMM: Fundamentos
 
 ### ¿Qué es un Modelo Oculto de Markov (HMM)?
 
@@ -178,7 +203,7 @@ Cuando un post contiene múltiples técnicas MITRE, se selecciona la fase de la 
 
 ---
 
-## 📊 Salidas Generadas
+## Salidas Generadas
 
 ### 1. `modelo_hmm.pkl` — Modelo HMM entrenado
 
@@ -199,7 +224,18 @@ Modelo serializado con `pickle` que contiene:
 | `confianza_prediccion` | `float` | Probabilidad de la predicción (0.0 - 1.0) |
 | `mensaje` | `str` | Estado del análisis ("OK" o "Secuencia demasiado corta") |
 
-### 3. Dashboard IA (`dashboard_ia.py`)
+### 3. `evaluacion/` — Reportes de Evaluación
+
+Directorio generado al ejecutar `--evaluar`:
+
+| Archivo | Descripción |
+|---------|-------------|
+| `reporte_evaluacion.csv` | Métricas de Precisión, Recall, F1-score por fase + globales (Accuracy, F1-macro, F1-weighted) |
+| `matriz_confusion.png` | Heatmap de la matriz de confusión multi-clase (6 fases de Kill Chain) |
+| `grafico_metricas.png` | Gráfico de barras comparativo de Precisión, Recall y F1 por fase |
+| `grafico_confianza.png` | Histograma de la distribución de confianza de las predicciones |
+
+### 4. Dashboard IA (`dashboard_ia.py`)
 
 Dashboard independiente que utiliza **inteligencia artificial** para generar análisis en lenguaje natural de los resultados del HMM.
 
@@ -219,7 +255,7 @@ streamlit run dashboard_ia.py
 
 ---
 
-## 🛠️ Pipeline Detallado
+## Pipeline Detallado
 
 ### Paso 1: Carga de secuencias (`cargar_secuencias.py`)
 
@@ -255,7 +291,22 @@ Para cada autor con ≥2 posts:
 
 Genera un archivo CSV tabular con todos los autores, su estado dominante, la fase predicha y la confianza.
 
-### Paso 5: Dashboard IA (`dashboard_ia.py`)
+### Paso 5: Evaluación del modelo (`evaluar_hmm.py`)
+
+Se ejecuta con el flag `--evaluar`. Pipeline de evaluación:
+
+1. **División hold-out**: Separa autores en train (80%) y test (20%)
+2. **Predicción vs Real**: Para cada autor en test, compara la fase predicha con la fase real (última fase de la secuencia)
+3. **Métricas de clasificación**:
+   - **Precisión**: De las predicciones de cada fase, cuántas fueron correctas
+   - **Recall**: De todas las ocurrencias reales de cada fase, cuántas se predijeron
+   - **F1-Score**: Media armónica entre Precisión y Recall
+   - **Accuracy**: Porcentaje general de aciertos
+4. **Matriz de confusión**: Heatmap que muestra qué fases se confunden entre sí
+5. **Análisis de confianza**: Distribución de las probabilidades de predicción
+6. **Reporte CSV**: Métricas detalladas por fase y por autor
+
+### Paso 6: Dashboard IA (`dashboard_ia.py`)
 
 Dashboard interactivo con **Streamlit** e **inteligencia artificial** para análisis en lenguaje natural de los resultados del HMM.
 
@@ -266,7 +317,7 @@ streamlit run dashboard_ia.py
 
 ---
 
-## 📈 Métricas del Modelo
+## Métricas del Modelo
 
 ### Parámetros del HMM
 
@@ -277,6 +328,19 @@ streamlit run dashboard_ia.py
 | Iteraciones | 100 | Máximo de iteraciones Baum-Welch |
 | Tolerancia | 1e-4 | Criterio de convergencia |
 
+### Métricas de Evaluación
+
+| Métrica | Descripción |
+|---------|-------------|
+| **Accuracy** | Porcentaje de predicciones correctas sobre el total |
+| **Precisión (macro)** | Promedio simple de la precisión de cada fase |
+| **Precisión (weighted)** | Promedio ponderado por cantidad de muestras por fase |
+| **Recall (macro)** | Promedio simple del recall de cada fase |
+| **Recall (weighted)** | Promedio ponderado del recall de cada fase |
+| **F1-Score (macro)** | Media armónica promedio de Precisión y Recall por fase |
+| **F1-Score (weighted)** | Media armónica ponderada por cantidad de muestras |
+| **Matriz de Confusión** | Tabla que muestra predicciones vs valores reales por fase |
+
 ### Validación de Secuencias
 
 1. **Longitud mínima**: ≥2 posts por autor para predicción
@@ -284,17 +348,18 @@ streamlit run dashboard_ia.py
 3. **Umbral de datos**: total_posts ≥ n_estados × 3 para evitar overfitting
 4. **Mapeo de técnicas**: Coincidencia exacta primero, luego parcial (técnica base)
 5. **Fase por defecto**: Técnicas no reconocidas → fase 5 (Acciones sobre objetivos)
+6. **Hold-out validation**: 80% train / 20% test para evaluar generalización
 
 ---
 
-## 🔄 Reejecución y Mantenimiento
+## Reejecución y Mantenimiento
 
 ### Características de Diseño
 
 - **Reanudación inteligente**: El modelo entrenado se guarda en `modelo_hmm.pkl`. Si ya existe, se carga automáticamente sin reentrenar
 - **Forzar reentrenamiento**: Usar `--retrain` para reentrenar desde cero
 - **Actualizable**: Si se actualiza `kill_chain_fases.json` o las secuencias de entrada, basta reejecutar
-- **Modular**: Cada componente (carga, entrenamiento, predicción, visualización) puede actualizarse independientemente
+- **Modular**: Cada componente (carga, entrenamiento, predicción, evaluación, visualización) puede actualizarse independientemente
 - **Logging completo**: Registro detallado en `hmm_processing_log.txt`
 
 ### Actualización del Mapeo Kill Chain
@@ -307,7 +372,7 @@ python modulos/main.py --retrain
 
 ---
 
-## 🎓 Casos de Uso
+## Casos de Uso
 
 ### 1. Análisis de Comportamiento por Autor
 
@@ -346,16 +411,26 @@ Los estados ocultos aprendidos por el HMM representan **perfiles de comportamien
 - **Estado 2**: Perfil de **persistencia** — altas probabilidades de fase 3-4
 - **Estado 3**: Perfil de **acción final** — altas probabilidades de fase 5
 
----
+### 4. Uso del Módulo de Evaluación
 
-## 📚 Referencias
+```python
+from modulos import evaluar_hmm
+import pickle
 
-- **hmmlearn**: Biblioteca de modelos ocultos de Markov para Python
-- **Cyber Kill Chain**: Framework de Lockheed Martin para ciclo de vida de ataques
-- **MITRE ATT&CK**: Base de conocimientos de técnicas de adversarios
-- **Baum-Welch**: Algoritmo EM para entrenamiento de HMM
-- **Algoritmo de Viterbi**: Decodificación de la secuencia de estados más probable
-- **Algoritmo Forward**: Cálculo de probabilidad de observaciones
+# Cargar modelo y secuencias
+with open('../Datos/modelo_hmm.pkl', 'rb') as f:
+    modelo = pickle.load(f)
+
+# Ejecutar evaluación completa
+resultados = evaluar_hmm.ejecutar_evaluacion_completa(
+    modelo, secuencias, mapeo_kill,
+    ruta_salida="../Datos/evaluacion"
+)
+
+# Acceder a métricas
+print(f"Accuracy: {resultados['metricas']['accuracy']:.2%}")
+print(f"F1-score: {resultados['metricas']['f1_macro']:.4f}")
+```
 
 ---
 
@@ -369,14 +444,17 @@ Los estados ocultos aprendidos por el HMM representan **perfiles de comportamien
 6. ✅ Reanudación inteligente (carga de modelo guardado sin reentrenar)
 7. ✅ Logging completo y manejo de errores robusto
 8. ✅ Compatibilidad con salida de Fase 2 (`secuencias_autores.json`)
+9. ✅ Evaluación del modelo con Precisión, Recall, F1-score (macro/weighted)
+10. ✅ Matriz de confusión multi-clase con visualización heatmap
+11. ✅ Validación hold-out (80/20) para medir generalización del modelo
+12. ✅ Reporte detallado de evaluación por fase y por autor
 
 ---
 
-## 🚀 Próximos Pasos (Integración)
+## Próximos Pasos (Integración)
 
 1. **Sistema de Alertas**: Notificar cuando un autor se acerque a fase crítica
 2. **Clustering de Autores**: Agrupar por perfil de comportamiento para análisis de redes
-3. **Evaluación Temporal**: Validar predicciones contra datos futuros
+3. **Evaluación**: Validar la precisión y efectividad del modelo predictivo.
 4. **Modelos Avanzados**: Comparar HMM con LSTM/Transformers para predicción de secuencias
-
-**¡ShadowMap - Fase 3 completada! Listo para visualizar con el Dashboard Integrador. 🚀**
+5. **Selección de Estados**: Implementar comparación AIC/BIC para número óptimo de estados ocultos

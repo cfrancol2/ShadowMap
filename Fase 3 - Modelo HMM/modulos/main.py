@@ -30,6 +30,7 @@ import os
 import cargar_secuencias
 import entrenar_hmm
 import predecir_siguiente
+import evaluar_hmm
 
 # ---------------------------------------------------------------------------
 # Configuración de logging
@@ -100,6 +101,14 @@ def main():
     parser.add_argument(
         "--incluir-sin-tecnicas", action="store_true",
         help="Incluir posts sin técnicas asignándoles fase por defecto (desactiva --omitir-sin-tecnicas)"
+    )
+    parser.add_argument(
+        "--evaluar", action="store_true",
+        help="Ejecutar evaluación del modelo con métricas de Precisión, Recall, F1-score y matriz de confusión"
+    )
+    parser.add_argument(
+        "--evaluacion-ruta", default="../Datos/evaluacion",
+        help="Directorio de salida para los reportes de evaluación (default: ../Datos/evaluacion)"
     )
 
     args = parser.parse_args()
@@ -192,6 +201,35 @@ def main():
     logger.info(f"Reporte guardado en: {args.reporte_csv}")
 
     # -----------------------------------------------------------------------
+    # Paso 5: Evaluación del modelo (opcional)
+    # -----------------------------------------------------------------------
+    if args.evaluar:
+        logger.info("\n" + "-" * 40)
+        logger.info("PASO 5: Evaluando el modelo HMM")
+        logger.info("-" * 40)
+
+        resultados_eval = evaluar_hmm.ejecutar_evaluacion_completa(
+            modelo,
+            secuencias,
+            mapeo_kill,
+            ruta_salida=args.evaluacion_ruta
+        )
+
+        if "error" not in resultados_eval:
+            metricas = resultados_eval["metricas"]
+            n_correctos = sum(1 for p in resultados_eval["predicciones"] if p["correcto"])
+            n_total = len(resultados_eval["predicciones"])
+            logger.info(f"\n🎯 RESUMEN DE EVALUACIÓN")
+            logger.info(f"  Accuracy: {metricas['accuracy']:.2%}")
+            logger.info(f"  F1-score (macro): {metricas['f1_macro']:.4f}")
+            logger.info(f"  F1-score (weighted): {metricas['f1_weighted']:.4f}")
+            logger.info(f"  Predicciones correctas: {n_correctos}/{n_total}")
+            logger.info(f"  Autores train: {resultados_eval['train_size']}, test: {resultados_eval['test_size']}")
+            logger.info(f"  📁 Reportes en: {args.evaluacion_ruta}/")
+        else:
+            logger.warning(f"No se pudo completar la evaluación: {resultados_eval['error']}")
+
+    # -----------------------------------------------------------------------
     # Resumen final
     # -----------------------------------------------------------------------
     logger.info("\n" + "=" * 60)
@@ -201,6 +239,8 @@ def main():
     logger.info(f"📋 Reporte autores: {args.reporte_csv}")
     logger.info(f"🎯 Total autores analizados: {len(resultados)}")
     logger.info(f"✅ Predicciones generadas: {autores_ok}")
+    if args.evaluar:
+        logger.info(f"📈 Evaluación del modelo: {args.evaluacion_ruta}/")
     logger.info(f"💡 Visualiza los resultados con: streamlit run dashboard_ia.py")
 
     return 0
