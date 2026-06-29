@@ -1,6 +1,5 @@
-"""
-Módulo de anonimización de PII para la capa de ingesta.
-"""
+# Módulo de anonimización de PII para la capa de ingesta.
+
 
 from __future__ import annotations
 
@@ -10,7 +9,7 @@ from typing import Any, Dict
 
 
 class PIIAnonymizer:
-    """Anonimiza campos sensibles usando reemplazo por hash estable."""
+    # Anonimiza campos sensibles usando reemplazo por hash estable
 
     def __init__(self, salt: str = "titulacion-ti") -> None:
         self.salt = salt

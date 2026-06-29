@@ -9,12 +9,6 @@ Orquestador que coordina todo el pipeline de enriquecimiento NLP:
 3. Mapea entidades a técnicas MITRE ATT&CK
 4. Calcula puntuación de amenaza
 5. Agrupa posts por autor y genera secuencias HMM
-
-Uso desde línea de comandos:
-    python main.py --input <csv_entrada> --output-csv <csv_salida> --output-hmm <json_salida>
-
-Ejemplo:
-    python main.py --input ../Datos/forum_records_clean.csv --output-csv ../Datos/datos_enriquecidos.csv --output-hmm ../Datos/secuencias_autores.json
 """
 
 import argparse
@@ -59,15 +53,8 @@ class ProcesadorSecureBERT:
     texto -> NER -> MITRE mapping -> threat score -> post enriquecido.
     """
 
+    # Inicializa el procesador con modelos SecureBERT 2.0.
     def __init__(self, ruta_mapeo_mitre: str = 'mitre_mapping.json'):
-        """
-        Inicializa el procesador con modelos SecureBERT 2.0.
-
-        Parámetros
-        ----------
-        ruta_mapeo_mitre : str
-            Ruta al archivo JSON con el mapeo MITRE ATT&CK.
-        """
         # Cargar mapeo MITRE
         self.mapeo_mitre = cargar_modelos.cargar_mapeo_mitre(ruta_mapeo_mitre)
 
@@ -88,26 +75,7 @@ class ProcesadorSecureBERT:
 
         logger.info("Modelos SecureBERT 2.0 cargados exitosamente")
 
-    def procesar_post(self, post: dict) -> dict:
-        """
-        Procesa un post individual: NER, mapeo MITRE y puntuación de amenaza.
-
-        Parámetros
-        ----------
-        post : dict
-            Diccionario con los datos del post. Debe contener al menos
-            'cuerpo_limpio' con el texto a analizar.
-
-        Retorna
-        -------
-        dict
-            Post enriquecido con los campos adicionales:
-            - entidades: JSON con entidades detectadas
-            - tecnicas_mitre: JSON con técnicas MITRE
-            - puntuacion_amenaza: puntuación de amenaza (0-1)
-            - cantidad_entidades: cantidad de entidades
-            - cantidad_tecnicas: cantidad de técnicas
-        """
+    def procesar_post(self, post: dict) -> dict:        
         try:
             # Extraer contenido limpio del post
             contenido_limpio = post.get('cuerpo_limpio', '') or post.get('cuerpo', '') or ''
@@ -154,10 +122,6 @@ class ProcesadorSecureBERT:
 # ---------------------------------------------------------------------------
 
 def main():
-    """
-    Función principal para ejecución desde línea de comandos.
-    Parsea argumentos, inicializa el procesador y ejecuta el pipeline completo.
-    """
     parser = argparse.ArgumentParser(
         description="main.py - Pipeline NLP con SecureBERT 2.0 para enriquecer datos de Dark Web",
         formatter_class=argparse.RawTextHelpFormatter
@@ -193,19 +157,6 @@ def main():
 
 
 def _ejecutar_pipeline(args) -> int:
-    """
-    Ejecuta el pipeline completo de enriquecimiento.
-
-    Parámetros
-    ----------
-    args : argparse.Namespace
-        Argumentos parseados de la línea de comandos.
-
-    Retorna
-    -------
-    int
-        0 si la ejecución fue exitosa, 1 si hubo error.
-    """
     try:
         logger.info("Iniciando pipeline de enriquecimiento NLP con SecureBERT 2.0...")
         logger.info(f"Configuración: {vars(args)}")
@@ -237,11 +188,6 @@ def _ejecutar_pipeline(args) -> int:
     except Exception as e:
         logger.error(f"❌ Error fatal en el pipeline: {e}")
         return 1
-
-
-# ---------------------------------------------------------------------------
-# Punto de entrada
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     main()

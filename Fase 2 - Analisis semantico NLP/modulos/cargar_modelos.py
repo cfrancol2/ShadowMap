@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-"""
-Módulo: cargar_modelos
-======================
-Encargado de cargar los modelos SecureBERT 2.0 desde Hugging Face
-y crear los pipelines de NER y clasificación de secuencias.
+# Módulo: cargar_modelos
 
-Funciones exportadas:
-  - cargar_mapeo_mitre(ruta) -> dict
-  - cargar_modelos() -> tuple(tokenizer, modelo_ner, modelo_seq)
-  - crear_pipeline_ner(modelo, tokenizer, dispositivo) -> pipeline
-  - crear_pipeline_secuencias(modelo, tokenizer, dispositivo) -> pipeline
-"""
+# Encargado de cargar los modelos SecureBERT 2.0 desde Hugging Face
+# y crear los pipelines de NER y clasificación de secuencias.
+
+# Funciones exportadas:
+#  cargar_mapeo_mitre(ruta) -> dict
+#  cargar_modelos() -> tuple(tokenizer, modelo_ner, modelo_seq)
+#  crear_pipeline_ner(modelo, tokenizer, dispositivo) -> pipeline
+#  crear_pipeline_secuencias(modelo, tokenizer, dispositivo) -> pipeline
+
 
 import json
 import logging
@@ -25,20 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 def cargar_mapeo_mitre(ruta: str) -> dict:
-    """
-    Carga el diccionario de mapeo MITRE ATT&CK desde un archivo JSON.
-
-    Parámetros
-    ----------
-    ruta : str
-        Ruta al archivo JSON con el mapeo.
-
-    Retorna
-    -------
-    dict
-        Diccionario con palabras clave como llaves y listas de técnicas MITRE como valores.
-        Si hay error, retorna un diccionario vacío.
-    """
     try:
         with open(ruta, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -47,17 +32,7 @@ def cargar_mapeo_mitre(ruta: str) -> dict:
         return {}
 
 
-def cargar_modelos() -> Tuple[Any, Any, Any]:
-    """
-    Carga los modelos SecureBERT 2.0 desde Hugging Face.
-    Incluye un fallback a bert-base-uncased si SecureBERT no está disponible.
-
-    Retorna
-    -------
-    tuple
-        (tokenizer, modelo_ner, modelo_seq) - los tres componentes del modelo.
-        modelo_ner y modelo_seq pueden ser el mismo objeto en el caso de fallback.
-    """
+def cargar_modelos() -> Tuple[Any, Any, Any]:    
     try:
         logger.info("Intentando cargar SecureBERT 2.0-NER desde Hugging Face...")
         tokenizador = AutoTokenizer.from_pretrained("cisco-ai/SecureBERT2.0-NER")
@@ -74,25 +49,7 @@ def cargar_modelos() -> Tuple[Any, Any, Any]:
         logger.info("✅ Modelo alternativo cargado exitosamente")
         return tokenizador, modelo, modelo
 
-
 def crear_pipeline_ner(modelo, tokenizador, dispositivo: str) -> pipeline:
-    """
-    Crea el pipeline de Named Entity Recognition (NER).
-
-    Parámetros
-    ----------
-    modelo : AutoModelForTokenClassification
-        Modelo cargado para clasificación de tokens.
-    tokenizador : AutoTokenizer
-        Tokenizador correspondiente al modelo.
-    dispositivo : str
-        'cuda' si hay GPU disponible, 'cpu' en caso contrario.
-
-    Retorna
-    -------
-    pipeline
-        Pipeline de Hugging Face configurado para NER.
-    """
     return pipeline(
         "ner",
         model=modelo,
@@ -103,23 +60,6 @@ def crear_pipeline_ner(modelo, tokenizador, dispositivo: str) -> pipeline:
 
 
 def crear_pipeline_secuencias(modelo, tokenizador, dispositivo: str) -> pipeline:
-    """
-    Crea el pipeline de clasificación de texto (secuencias).
-
-    Parámetros
-    ----------
-    modelo : AutoModelForTokenClassification
-        Modelo cargado para clasificación.
-    tokenizador : AutoTokenizer
-        Tokenizador correspondiente al modelo.
-    dispositivo : str
-        'cuda' si hay GPU disponible, 'cpu' en caso contrario.
-
-    Retorna
-    -------
-    pipeline
-        Pipeline de Hugging Face configurado para clasificación de texto.
-    """
     return pipeline(
         "text-classification",
         model=modelo,

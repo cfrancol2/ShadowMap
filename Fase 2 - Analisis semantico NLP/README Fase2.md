@@ -4,11 +4,11 @@
 
 ---
 
-## 📋 Descripción General
+## Descripción General
 
 Esta fase implementa el **procesamiento NLP avanzado** utilizando modelos **SecureBERT 2.0** para analizar conversaciones de foros `.onion`, extraer entidades de ciberseguridad y preparar datos estructurados que alimentarán el modelo **Hidden Markov Model (HMM)** en la Fase 3.
 
-### 🎯 Objetivos Principales
+### Objetivos Principales
 
 1. **Detección de Entidades Especializadas**: Identificar herramientas ofensivas, vulnerabilidades, técnicas MITRE y sectores objetivo
 2. **Enriquecimiento Semántico**: Añadir metadatos estructurados a los datos crudos
@@ -18,7 +18,7 @@ Esta fase implementa el **procesamiento NLP avanzado** utilizando modelos **Secu
 
 ---
 
-## 🏗️ Arquitectura del Sistema (Modular)
+## Arquitectura del Sistema (Modular)
 
 La Fase 2 está organizada en **módulos independientes** con nombres en español para facilitar su comprensión y presentación.
 
@@ -91,7 +91,7 @@ Datos/
 
 ---
 
-## 🔧 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Modelos de Lenguaje
 - **SecureBERT 2.0-NER**: Modelo especializado en ciberseguridad para detección de entidades
@@ -108,7 +108,7 @@ Datos/
 
 ---
 
-## 🚀 Ejecución del Pipeline
+## Ejecución del Pipeline
 
 ### Requisitos Previos
 
@@ -133,9 +133,9 @@ pip install -r requirements.txt
 python -c "import transformers, torch; print('Dependencias instaladas correctamente')"
 ```
 
-> ⚠️ **Importante para Linux**: Si usas WSL o una máquina virtual Linux, asegúrate de ejecutar `pip` y `python` desde el entorno Linux, no desde Windows. El script `install_linux.sh` automatiza todo el proceso.
+> **Importante para Linux**: Si usas WSL o una máquina virtual Linux, asegúrate de ejecutar `pip` y `python` desde el entorno Linux, no desde Windows. El script `install_linux.sh` automatiza todo el proceso.
 >
-> 💡 **Solución rápida si pip no encuentra los módulos**: A veces hay conflictos entre versiones de Python. Usa:
+> **Solución rápida si pip no encuentra los módulos**: A veces hay conflictos entre versiones de Python. Usa:
 > ```bash
 > python3 -m pip install --upgrade pip
 > python3 -m pip install -r requirements.txt
@@ -161,14 +161,14 @@ python modulos/main.py \
 
 ---
 
-## 📊 Salidas Generadas
+## Salidas Generadas
 
 ### 1. `datos_enriquecidos.csv` — 22 campos totales
 
 **Campos heredados de la Fase 1** (17 campos):
 `id_mensaje`, `huella_contenido`, `id_hilo`, `id_mensaje_padre`, `usuario`, `fecha_hora`, `fecha`, `año`, `mes`, `dia`, `hora`, `titulo_limpio`, `cuerpo_limpio`, `texto_citado_limpio`, `longitud_titulo`, `longitud_cuerpo`, `url_original`
 
-**Campos nuevos agregados por Fase 2** (5 campos en español):
+**Campos nuevos agregados por Fase 2** (5 campos):
 
 | Columna | Tipo | Descripción |
 |---------|------|-------------|
@@ -218,7 +218,7 @@ python modulos/main.py \
 
 ---
 
-## 🎯 Flujo del Pipeline (detallado)
+## Flujo del Pipeline (detallado)
 
 ### Paso 1: Carga de modelos
 `cargar_modelos.py` carga SecureBERT 2.0-NER desde Hugging Face y crea:
@@ -253,7 +253,7 @@ puntuacion_amenaza = (confianza_promedio_entidades * 0.7) + (cantidad_tecnicas_m
 
 ---
 
-## 📈 Métricas y Validación
+## Métricas y Validación
 
 ### Validación de Secuencias
 1. **Longitud mínima**: ≥3 posts por autor (evita overfitting en HMM)
@@ -263,7 +263,7 @@ puntuacion_amenaza = (confianza_promedio_entidades * 0.7) + (cantidad_tecnicas_m
 
 ---
 
-## 🔄 Reejecución y Mantenimiento
+## Reejecución y Mantenimiento
 
 ### Características de Diseño
 - **Reejecutable**: El pipeline puede ejecutarse múltiples veces sobre los mismos datos
@@ -271,18 +271,9 @@ puntuacion_amenaza = (confianza_promedio_entidades * 0.7) + (cantidad_tecnicas_m
 - **Incremental**: No requiere repetir la costosa fase de scraping
 - **Modular**: Cada componente puede actualizarse independientemente
 - **Logging completo**: Registro detallado en `processing_log.txt`
-
-### Actualización de Modelos
-```bash
-# Para actualizar a nuevas versiones de SecureBERT
-pip install --upgrade transformers torch
-
-# El pipeline cargará automáticamente los modelos actualizados
-```
-
 ---
 
-## 🎓 Casos de Uso
+##  Casos de Uso
 
 ### 1. Análisis de Amenazas
 ```python
@@ -313,22 +304,6 @@ print(f"Secuencias válidas: {hmm_data['metadata']['secuencias_validas']}")
 
 ---
 
-## 🚨 Consideraciones de Seguridad
-- **Datos sensibles**: El script procesa datos de Dark Web - usar en entornos seguros
-- **Modelos grandes**: SecureBERT requiere ~2GB de memoria por modelo
-- **Tiempo de ejecución**: Procesamiento por lotes para grandes volúmenes de datos
-- **Compatibilidad**: Diseñado para Python 3.9+ con CUDA (recomendado)
-
----
-
-## 📚 Referencias
-- **SecureBERT 2.0**: Modelo especializado en ciberseguridad de Cisco AI
-- **MITRE ATT&CK**: Framework de técnicas de adversarios
-- **Transformers**: Librería Hugging Face para NLP
-- **HMM**: Modelos Ocultos de Markov para análisis de secuencias
-
----
-
 ## ✅ Criterios de Éxito
 
 1. ✅ Detección exitosa de entidades de ciberseguridad (con filtro ≥ 0.5)
@@ -341,13 +316,3 @@ print(f"Secuencias válidas: {hmm_data['metadata']['secuencias_validas']}")
 8. ✅ Fallback automático si SecureBERT no está disponible
 9. ✅ Campos de salida en español
 
----
-
-## 🎯 Próximos Pasos (Fase 3)
-
-1. **Entrenamiento HMM**: Usar `secuencias_autores.json` para entrenar el modelo
-2. **Análisis Predictivo**: Detectar patrones de comportamiento malicioso
-3. **Visualización**: Dashboard de amenazas y tendencias
-4. **Integración**: Conectar con sistemas de alerta temprana
-
-**¡La Fase 2 está completa y lista para alimentar el modelo HMM! 🚀**

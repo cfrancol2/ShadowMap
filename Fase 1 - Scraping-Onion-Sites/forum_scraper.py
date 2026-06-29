@@ -43,9 +43,8 @@ FIELDNAMES = [
     "url_original",
 ]
 
-
-def setup_logger(log_file: str) -> logging.Logger:
-    """Configura logger a archivo y consola para trazabilidad del scraping."""
+# Configura logger a archivo y consola para trazabilidad del scraping
+def setup_logger(log_file: str) -> logging.Logger:    
     os.makedirs(os.path.dirname(log_file) or ".", exist_ok=True)
     logger = logging.getLogger("forum_scraper")
     logger.setLevel(logging.INFO)
@@ -62,16 +61,15 @@ def setup_logger(log_file: str) -> logging.Logger:
     return logger
 
 
-def load_lines(filepath: str) -> List[str]:
-    """Carga líneas no vacías de un archivo de texto."""
+# Carga líneas no vacías de un archivo de texto
+def load_lines(filepath: str) -> List[str]:    
     if not os.path.exists(filepath):
         return []
     with open(filepath, "r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
 
-
-def normalize_url(url: str) -> Optional[str]:
-    """Normaliza URL onion y descarta recursos no útiles para scraping de foros."""
+# Normaliza URL onion y descarta recursos no útiles para scraping de foroS
+def normalize_url(url: str) -> Optional[str]:    
     url = url.split("#")[0].split("?")[0].strip()
     if ".onion" not in url:
         return None
@@ -82,8 +80,8 @@ def normalize_url(url: str) -> Optional[str]:
     return url
 
 
-def extract_onion_links(html: str) -> Set[str]:
-    """Extrae enlaces .onion válidos desde atributos y texto visible del HTML."""
+# Extrae enlaces .onion válidos desde atributos y texto visible del HTML
+def extract_onion_links(html: str) -> Set[str]:    
     soup = BeautifulSoup(html, "html.parser")
     links: Set[str] = set()
 
@@ -104,9 +102,8 @@ def extract_onion_links(html: str) -> Set[str]:
             links.add(norm)
     return links
 
-
-def infer_thread_id(url: str, html: str) -> str:
-    """Obtiene identificador de hilo desde URL/HTML o genera uno determinístico."""
+# Obtiene identificador de hilo desde URL/HTML o genera uno determinístico
+def infer_thread_id(url: str, html: str) -> str: 
     match = re.search(r"(?:thread|topic|t|showtopic|viewtopic)[=/](\d+)", url, flags=re.IGNORECASE)
     if match:
         return f"thread_{match.group(1)}"
@@ -120,8 +117,8 @@ def infer_thread_id(url: str, html: str) -> str:
     return "thread_" + hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
 
 
-def parse_timestamp(raw_ts: str) -> str:
-    """Convierte timestamp libre a ISO UTC; usa hora actual si falla el parseo."""
+# Convierte timestamp libre a ISO UTC; usa hora actual si falla el parseo
+def parse_timestamp(raw_ts: str) -> str:    
     if not raw_ts:
         return datetime.now(timezone.utc).isoformat()
 
@@ -141,9 +138,8 @@ def parse_timestamp(raw_ts: str) -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-
-def pick_first_text(node, selectors: List[str]) -> str:
-    """Devuelve el primer texto encontrado usando una lista de selectores CSS."""
+# Devuelve el primer texto encontrado usando una lista de selectores CSS
+def pick_first_text(node, selectors: List[str]) -> str:    
     for sel in selectors:
         found = node.select_one(sel)
         if found:
@@ -152,9 +148,8 @@ def pick_first_text(node, selectors: List[str]) -> str:
                 return txt
     return ""
 
-
-def normalize_text_for_fingerprint(text: str) -> str:
-    """Normaliza texto para comparación: minúsculas, espacios, trim."""
+# Normaliza texto para comparación: minúsculas, espacios, trim
+def normalize_text_for_fingerprint(text: str) -> str:    
     if not text:
         return ""
     # Convertir a minúsculas
@@ -165,8 +160,8 @@ def normalize_text_for_fingerprint(text: str) -> str:
     text = text.strip()
     return text
 
-def extract_posts_from_html(url: str, html: str) -> List[Dict[str, Any]]:
-    """Extrae registros estructurados de posts desde una página de foro."""
+# Extrae registros estructurados de posts desde una página de foro
+def extract_posts_from_html(url: str, html: str) -> List[Dict[str, Any]]:    
     soup = BeautifulSoup(html, "html.parser")
     thread_id = infer_thread_id(url, html)
     page_title = pick_first_text(soup, ["h1", "h2", "title"]) or "sin_titulo"
@@ -226,20 +221,21 @@ def extract_posts_from_html(url: str, html: str) -> List[Dict[str, Any]]:
         )
     return records
 
+# Guarda registros en formato JSONL para procesamiento incremental
+# Modo 'a' para append y evitar sobreescritura en guardado incremental
 
 def save_jsonl(records: List[Dict[str, Any]], path: str) -> None:
-    """Guarda registros en formato JSONL para procesamiento incremental.
-    Modo 'a' para append y evitar sobreescritura en guardado incremental."""
+    
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
+#    Guarda registros en CSV para análisis tabular.
+#    Modo 'a' para append y evitar sobreescritura en guardado incremental.
+#    Solo escribe header si el archivo está vacío.
 
 def save_csv(records: List[Dict[str, Any]], path: str) -> None:
-    """Guarda registros en CSV para análisis tabular.
-    Modo 'a' para append y evitar sobreescritura en guardado incremental.
-    Solo escribe header si el archivo está vacío."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     file_exists = os.path.exists(path) and os.path.getsize(path) > 0
     with open(path, "a", newline="", encoding="utf-8") as f:
@@ -250,24 +246,23 @@ def save_csv(records: List[Dict[str, Any]], path: str) -> None:
             row = dict(r)
             writer.writerow({k: row.get(k) for k in FIELDNAMES})
 
-
-def save_keyword_report(matches: List[Dict[str, str]], path: str) -> None:
-    """Guarda coincidencias keyword|url en un archivo de reporte (modo append)."""
+# Guarda coincidencias keyword|url en un archivo de reporte (modo append)
+def save_keyword_report(matches: List[Dict[str, str]], path: str) -> None:  
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         for m in matches:
             f.write(f"{m['keyword']} | {m['url']}\n")
 
+# Guarda report incremental con formato keyword | count | url
 def save_incremental_keyword_report(keyword_counts: Dict[str, int], path: str, current_url: str) -> None:
-    """Guarda report incremental con formato keyword | count | url."""
+   
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         for keyword, count in keyword_counts.items():
             f.write(f"{keyword} | {count} | {current_url}\n")
 
-
-def save_checkpoint(path: str, pending: List[Tuple[str, int]], visited: Set[str]) -> None:
-    """Persiste estado de ejecución para poder pausar y reanudar."""
+# Persiste estado de ejecución para poder pausar y reanudar
+def save_checkpoint(path: str, pending: List[Tuple[str, int]], visited: Set[str]) -> None:    
     data = {
         "pending": [{"url": u, "depth": d} for u, d in pending],
         "visited": list(visited),
@@ -277,9 +272,8 @@ def save_checkpoint(path: str, pending: List[Tuple[str, int]], visited: Set[str]
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-
-def load_checkpoint(path: str) -> Tuple[List[Tuple[str, int]], Set[str]]:
-    """Carga checkpoint previo y retorna cola pendiente y URLs visitadas."""
+# Carga checkpoint previo y retorna cola pendiente y URLs visitadas
+def load_checkpoint(path: str) -> Tuple[List[Tuple[str, int]], Set[str]]:    
     if not os.path.exists(path):
         return [], set()
     with open(path, "r", encoding="utf-8") as f:
@@ -288,9 +282,8 @@ def load_checkpoint(path: str) -> Tuple[List[Tuple[str, int]], Set[str]]:
     visited = set(data.get("visited", []))
     return pending, visited
 
-
+# Detecta señales de baneo/honeypot: 403 o redirección sospechosa
 def is_ban_or_honeypot(status_code: int, requested_url: str, final_url: str) -> bool:
-    """Detecta señales de baneo/honeypot: 403 o redirección sospechosa."""
     if status_code == 403:
         return True
     req = urlparse(requested_url)
@@ -302,13 +295,12 @@ def is_ban_or_honeypot(status_code: int, requested_url: str, final_url: str) -> 
             return True
     return False
 
-
+    # Construye el cliente HTTP según modo de red.
+    # local-tor: usa RequestsTor con puertos locales 9050/9051.
+    # whonix: usa requests.Session con proxy SOCKS apuntando al Gateway Whonix (10.152.152.10:9050).
+    
 def build_http_client(network_mode: str):
-    """Construye el cliente HTTP según modo de red.
-
-    - local-tor: usa RequestsTor con puertos locales 9050/9051.
-    - whonix: usa requests.Session con proxy SOCKS apuntando al Gateway Whonix (10.152.152.10:9050).
-    """
+    
     if network_mode == "whonix":
         session = requests.Session()
         session.proxies = {
@@ -323,12 +315,10 @@ def build_http_client(network_mode: str):
     session = requests.Session()
     return session
 
+    # Rota identidad/circuito Tor para recuperarse de bloqueos.
+    # En modo whonix no se rota circuito local porque el enrutamiento lo maneja Whonix Gateway.
 
-def rotate_tor_circuit(logger: logging.Logger, rtor: Any, network_mode: str) -> Any:
-    """Rota identidad/circuito Tor para recuperarse de bloqueos.
-
-    En modo whonix no se rota circuito local porque el enrutamiento lo maneja Whonix Gateway.
-    """
+def rotate_tor_circuit(logger: logging.Logger, rtor: Any, network_mode: str) -> Any:  
     if network_mode != "local-tor":
         logger.warning("Baneo detectado en modo whonix: no se rota circuito local, se reintenta tras espera.")
         time.sleep(10)
@@ -360,10 +350,10 @@ def fetch_with_resilience(
     timeout: int,
     max_retries: int,
 ) -> Tuple[Optional[Any], Any, bool]:
-    """Realiza request robusta con reintentos, manejo de 5xx y detección de baneo.
-
-    Retorna: (response, instancia_rtor, banned_detected)
-    """
+    
+    # Realiza request robusta con reintentos, manejo de 5xx y detección de baneo.
+    # Retorna: (response, instancia_rtor, banned_detected)
+    
     for attempt in range(1, max_retries + 1):
         try:
             response = rtor.get(url, headers={"User-Agent": random.choice(USER_AGENTS)}, timeout=timeout)

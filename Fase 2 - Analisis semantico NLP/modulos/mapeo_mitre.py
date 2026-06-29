@@ -18,43 +18,14 @@ from typing import List, Dict, Any
 logger = logging.getLogger(__name__)
 
 
-def _normalizar_texto(texto: str) -> str:
-    """
-    Normaliza texto para matching flexible:
-    - Minúsculas
-    - Eliminar espacios extra, guiones, puntos, barras bajas
-    """
+def _normalizar_texto(texto: str) -> str:    
     texto = texto.lower().strip()
     texto = re.sub(r'[\s\-_./]+', ' ', texto)
     texto = re.sub(r'\s+', ' ', texto)
     return texto
 
-
+# Mapea las entidades detectadas por NER a técnicas MITRE ATT&CK
 def mapear_a_mitre(entidades: List[Dict[str, Any]], mapeo_mitre: dict) -> List[str]:
-    """
-    Mapea las entidades detectadas por NER a técnicas MITRE ATT&CK
-    usando un diccionario de mapeo predefinido.
-
-    Implementa matching flexible:
-    1. Coincidencia exacta (case-insensitive)
-    2. Coincidencia con normalización (sin espacios/guiones)
-    3. Coincidencia por subcadena
-
-    Parámetros
-    ----------
-    entidades : list[dict]
-        Lista de entidades detectadas. Cada entidad debe tener al menos
-        una llave 'text' con el texto extraído.
-    mapeo_mitre : dict
-        Diccionario donde las llaves son palabras clave y los valores
-        son listas de IDs de técnicas MITRE (ej. "T1204.002").
-
-    Retorna
-    -------
-    list[str]
-        Lista ordenada de IDs de técnicas MITRE únicas encontradas.
-        Retorna lista vacía si no hay coincidencias.
-    """
     tecnicas = set()
 
     # Pre-normalizar las claves del mapeo para matching rápido
@@ -93,20 +64,7 @@ def calcular_puntuacion_amenaza(entidades: List[Dict[str, Any]],
     """
     Calcula una puntuación de amenaza (0 a 1) para un post basándose en:
     - La confianza promedio de las entidades detectadas (70% del peso)
-    - La cantidad de técnicas MITRE asociadas (30% del peso)
-
-    Parámetros
-    ----------
-    entidades : list[dict]
-        Lista de entidades detectadas con sus confianzas.
-    tecnicas_mitre : list[str]
-        Lista de IDs de técnicas MITRE mapeadas.
-
-    Retorna
-    -------
-    float
-        Puntuación de amenaza entre 0.0 y 1.0 (redondeada a 4 decimales).
-        Retorna 0.0 si no hay entidades ni técnicas.
+    - La cantidad de técnicas MITRE asociadas (30% del peso)    
     """
     if not entidades and not tecnicas_mitre:
         return 0.0

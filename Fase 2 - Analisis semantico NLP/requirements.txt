@@ -1,6 +1,6 @@
 # Dependencias para Fase 2 - Analisis semantico NLP
 # ---------------------------------------------------------------
-# ⚠️ IMPORTANTE: Ejecuta estos pasos EN ORDEN:
+# IMPORTANTE: Ejecuta estos pasos EN ORDEN:
 #
 # PASO 1 - Instalar PyTorch CPU-only (~200MB):
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -8,7 +8,7 @@
 # PASO 2 - Instalar el resto:
 #   pip install transformers pandas numpy scikit-learn tqdm requests jsonlines python-dateutil
 #
-# ❌ NO ejecutes: pip install -r requirements.txt sin el Paso 1.
+# NO ejecutes: pip install -r requirements.txt sin el Paso 1.
 #    PyTorch CUDA descarga ~1GB+ y puede llenar el disco en VMs.
 #
 # O usa el script automático:

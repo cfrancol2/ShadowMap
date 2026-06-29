@@ -157,14 +157,6 @@ python Preprocesador.py \
 
 Esto genera `forum_records_clean.csv` en la carpeta `Datos/`, que es la entrada directa para la **Fase 2** (enriquecimiento NLP con SecureBERT).
 
-### Paso 3: Dashboard interactivo (opcional)
-
-Para visualizar los datos preprocesados:
-
-```bash
-streamlit run dashboard.py
-```
-
 ## Monitoreo y manejo de errores (implementado en el scraper)
 
 El scraper incluye mecanismos robustos para entornos onion inestables:
@@ -205,10 +197,6 @@ El módulo `anonymizer.py` reemplaza datos sensibles por tokens hash estables:
 | IP v4 | `IPV4_<hash>` | `IPV4_9a8b7c6d5e4f3g2h` |
 | Dirección .onion | `ONION_<hash>` | `ONION_1a2b3c4d5e6f7g8h` |
 | Dirección BTC | `BTC_<hash>` | `BTC_f8e7d6c5b4a3g2h1` |
-
-Los usernames se anonimizan con prefijo `USER_<hash>`. Esto permite:
-- **Privacidad**: no se almacenan datos personales reales
-- **Trazabilidad**: el hash es determinístico, permitiendo agrupar por autor
 
 ## Salidas generadas
 

@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 """
-Módulo: secuencias_autores
-===========================
 Encargado de la agrupación de posts por autor, ordenamiento cronológico
 y filtrado de secuencias válidas para entrenamiento HMM.
-
-Funciones exportadas:
-  - agrupar_por_autor(posts) -> dict[str, list[dict]]
-  - filtrar_secuencias(secuencias_autores, longitud_minima) -> dict[str, list[dict]]
 """
 
 import logging
@@ -23,21 +17,6 @@ def agrupar_por_autor(posts: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, A
     """
     Agrupa los posts por nombre de usuario y los ordena cronológicamente
     dentro de cada grupo.
-
-    Parámetros
-    ----------
-    posts : list[dict]
-        Lista de diccionarios, cada uno representando un post enriquecido.
-        Cada post debe tener al menos:
-        - 'usuario': nombre del autor
-        - 'fecha_hora': marca de tiempo del post
-
-    Retorna
-    -------
-    dict[str, list[dict]]
-        Diccionario donde las llaves son nombres de usuario y los valores
-        son listas de posts ordenados cronológicamente (más antiguo primero).
-        Los posts sin timestamp válido son omitidos.
     """
     secuencias = {}
 
@@ -82,21 +61,7 @@ def filtrar_secuencias(secuencias_autores: Dict[str, List[Dict[str, Any]]],
                        longitud_minima: int = 3) -> Dict[str, List[Dict[str, Any]]]:
     """
     Filtra las secuencias de autores, conservando solo aquellas que tengan
-    una longitud mínima requerida (útil para entrenamiento HMM).
-
-    Parámetros
-    ----------
-    secuencias_autores : dict[str, list[dict]]
-        Diccionario de secuencias agrupadas por autor.
-    longitud_minima : int, opcional
-        Número mínimo de posts que debe tener una secuencia para ser válida.
-        Por defecto es 3.
-
-    Retorna
-    -------
-    dict[str, list[dict]]
-        Diccionario filtrado con solo las secuencias que cumplen
-        la longitud mínima.
+    una longitud mínima requerida (útil para entrenamiento HMM).        
     """
     return {
         nombre_usuario: secuencia

@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 """
-Módulo: procesar_datos
-=======================
 Encargado de la lectura/escritura de archivos CSV y la generación
 de secuencias en formato JSON para entrenamiento HMM.
-
-Funciones exportadas:
-  - procesar_csv(entrada, salida, procesar_post_fn, logger) -> None
-  - generar_secuencias_hmm(entrada_csv, salida_json, agrupar_fn, filtrar_fn) -> None
 """
 
 import json
@@ -27,21 +21,6 @@ def procesar_csv(ruta_entrada: str,
     """
     Lee un archivo CSV, procesa cada post con la función proporcionada
     y guarda el resultado en un nuevo CSV enriquecido.
-
-    Parámetros
-    ----------
-    ruta_entrada : str
-        Ruta al archivo CSV de entrada (datos limpios de Fase 1).
-    ruta_salida : str
-        Ruta donde se guardará el CSV enriquecido.
-    funcion_procesar_post : callable
-        Función que recibe un diccionario (post) y retorna el mismo
-        diccionario enriquecido con entidades, técnicas MITRE, etc.
-
-    Lanza
-    -----
-    Exception
-        Si hay error en la lectura del archivo o durante el procesamiento.
     """
     try:
         logger.info(f"Cargando datos desde {ruta_entrada}...")
@@ -77,22 +56,6 @@ def generar_secuencias_hmm(ruta_csv_entrada: str,
     """
     Genera secuencias de autores para entrenamiento HMM a partir
     de un CSV enriquecido, y las guarda en formato JSON.
-
-    Parámetros
-    ----------
-    ruta_csv_entrada : str
-        Ruta al CSV con datos enriquecidos (salida de procesar_csv).
-    ruta_json_salida : str
-        Ruta donde se guardará el JSON con las secuencias.
-    funcion_agrupar : callable
-        Función para agrupar posts por autor (ej. agrupar_por_autor).
-    funcion_filtrar : callable
-        Función para filtrar secuencias cortas (ej. filtrar_secuencias).
-
-    Lanza
-    -----
-    Exception
-        Si hay error en la lectura del archivo o durante la generación.
     """
     from datetime import datetime
 

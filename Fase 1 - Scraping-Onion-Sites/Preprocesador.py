@@ -1,7 +1,5 @@
-"""
-Preprocesador para datos del scraper de foros .onion
-Limpia y prepara el corpus para análisis posterior.
-"""
+# Preprocesador para datos del scraper de foros .onion
+# Limpia y prepara el corpus para análisis posterior.
 
 import pandas as pd
 import re
@@ -10,8 +8,8 @@ import argparse
 from datetime import datetime
 from typing import List, Dict, Any
 
-def limpiar_texto(texto: str) -> str:
-    """Limpia texto eliminando caracteres especiales y normalizando formato."""
+# Limpia texto eliminando caracteres especiales y normalizando formato
+def limpiar_texto(texto: str) -> str:    
     if not texto or pd.isna(texto):
         return ""
 
@@ -113,8 +111,9 @@ def preprocesar_csv(ruta_entrada: str, ruta_salida: str) -> None:
     for col in df_final.columns:
         print(f"  {col}: {df_final[col].dtype}")
 
+# Punto de entrada para ejecución desde línea de comandos
 def main():
-    """Punto de entrada para ejecución desde línea de comandos."""
+    
     parser = argparse.ArgumentParser(description="Preprocesador para datos del scraper de foros .onion")
     parser.add_argument("--input", "-i", default="../Datos/forum_records.csv",
                        help="Ruta al CSV de entrada")

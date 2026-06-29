@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 """
-Módulo: procesar_ner
-=====================
 Encargado del reconocimiento de entidades nombradas (NER) usando SecureBERT.
 Procesa textos con el pipeline NER de Hugging Face, filtra por confianza
 y deduplica resultados.
-
-Funciones exportadas:
-  - procesar_ner(texto, pipeline_ner) -> list[dict]
 """
 
 import logging
@@ -26,25 +21,6 @@ def procesar_ner(texto: str, pipeline_ner) -> List[Dict[str, Any]]:
     """
     Procesa un texto con el pipeline NER de SecureBERT para detectar
     entidades de ciberseguridad, filtra por confianza y deduplica resultados.
-
-    Parámetros
-    ----------
-    texto : str
-        Texto a analizar.
-    pipeline_ner : pipeline
-        Pipeline de Hugging Face configurado para NER.
-
-    Retorna
-    -------
-    list[dict]
-        Lista de entidades detectadas, filtradas y deduplicadas.
-        Cada entidad tiene:
-        - type: categoría de la entidad (ej. MALWARE, TOOL, VULNERABILITY)
-        - text: texto extraído
-        - confidence: confianza de la detección (0.0 a 1.0)
-        - start: posición inicial en el texto
-        - end: posición final en el texto
-        Si el texto está vacío o hay error, retorna lista vacía.
     """
     # Validar entrada
     if not texto or pd.isna(texto) or str(texto).strip() == "":
