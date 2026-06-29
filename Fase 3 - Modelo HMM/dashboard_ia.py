@@ -2,22 +2,11 @@
 # encoding: utf-8
 """
 Dashboard IA - Análisis inteligente de resultados HMM con múltiples proveedores
-===============================================================================
-Dashboard independiente que carga los resultados del modelo HMM y utiliza
-inteligencia artificial para generar interpretaciones en lenguaje natural
-de los patrones de comportamiento detectados.
-
 Proveedores soportados:
   - DeepSeek (V3 / R1) — API compatible con OpenAI
   - Mistral (Small / Large) — API compatible con OpenAI
   - Google Gemini (2.0 Flash) — API nativa
   - Groq (Llama 3.3 70B) — API compatible con OpenAI
-
-Uso:
-    streamlit run dashboard_ia.py
-
-Requiere:
-    pip install streamlit pandas plotly numpy openai google-generativeai
 """
 
 import streamlit as st
@@ -478,7 +467,7 @@ if not any(datos_disponibles.values()):
 # Cabecera
 # ---------------------------------------------------------------------------
 
-st.title("🤖 Dashboard IA - Análisis HMM con Inteligencia Artificial")
+st.title("🤖 Dashboard - Análisis de REsultadosl")
 st.markdown(
     "Análisis inteligente de resultados del Modelo Oculto de Markov "
     f"utilizando **{proveedorSeleccionado}** para interpretación en lenguaje natural."
@@ -507,9 +496,9 @@ st.markdown("---")
 # ---------------------------------------------------------------------------
 
 tab1, tab2, tab3 = st.tabs([
-    "📊 Resumen del Modelo",
-    "🔍 Análisis por Autor",
-    "🤖 Análisis con IA"
+    "   📊 Resumen del Modelo",
+    "   🔍 Análisis por Autor",
+    "   🤖 Análisis con IA"
 ])
 
 # ============================================================================
@@ -723,7 +712,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: gray;'>
-        🤖 Dashboard IA - Proyecto de Titulación TI ·
+        🤖 Dashboard - Proyecto de Titulación TI ·
         Análisis de comportamiento en foros .onion con HMM + IA
     </div>
     """,
