@@ -312,7 +312,8 @@ def ejecutar_fase3():
     1. Entrenar modelo HMM
     2. Re-entrenar forzado (ignorar modelo existente)
     3. Configurar parametros
-    4. Lanzar dashboard_ia.py (Streamlit + IA)
+    4. Evaluar modelo (Precision, Recall, F1-score, Matriz de Confusion)
+    5. Lanzar dashboard_ia.py (Streamlit + IA)
     0. Volver
         """)
 
@@ -349,6 +350,19 @@ def ejecutar_fase3():
             params["n_iter"] = input(f"    Iteraciones [{params['n_iter']}]: ").strip() or params['n_iter']
             print("\n  Parametros actualizados.\n")
         elif opcion == "4":
+            print("\n  Ejecutando evaluacion del modelo HMM...")
+            print("  Esto generara reportes en ../Datos/evaluacion/\n")
+            return ejecutar_comando(
+                f"python modulos/main.py "
+                f"-i {params['input']} "
+                f"-k {params['kill_chain']} "
+                f"-m {params['modelo']} "
+                f"-r {params['reporte_csv']} "
+                f"-e {params['n_estados']} -n {params['n_iter']} "
+                f"--evaluar",
+                cwd=RUTA_FASE3,
+            )
+        elif opcion == "5":
             print("\n  Abriendo dashboard_ia.py en el navegador...")
             print("  (Presiona Ctrl+C para detener el servidor)\n")
             subprocess.Popen(
